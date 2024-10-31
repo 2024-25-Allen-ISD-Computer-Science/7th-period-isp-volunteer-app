@@ -1,9 +1,13 @@
 import React from 'react';
 import Homepage from './Components/Homepage';
+import AuthScreen from './Components/AuthScreen';
 
 const App = () => {
   return (
-    <Homepage />
+    <View style={{ flex: 1 }}> {/* This ensures the components take up the full screen */}
+      <Homepage />
+      <AuthScreen />
+    </View>
   );
 };
 
