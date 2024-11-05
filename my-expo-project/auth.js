@@ -1,10 +1,10 @@
-import { firebase } from "./firebaseConfig"; // Adjust the path if needed
+import { firebase } from "./firebaseConfig";
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Sign-Up Function
+// Email/Password Sign-Up
 export const signUpWithEmail = async (email, password) => {
   try {
     await firebase.auth().createUserWithEmailAndPassword(email, password);
@@ -14,7 +14,7 @@ export const signUpWithEmail = async (email, password) => {
   }
 };
 
-// Sign-In Function
+// Email/Password Sign-In
 export const signInWithEmail = async (email, password) => {
   try {
     await firebase.auth().signInWithEmailAndPassword(email, password);
@@ -24,11 +24,11 @@ export const signInWithEmail = async (email, password) => {
   }
 };
 
-// Google Sign-In Function
+// Google Sign-In
 export const signInWithGoogle = async () => {
   try {
     const redirectUri = AuthSession.makeRedirectUri({
-      useProxy: true, // Set to true if you are testing on Expo Go
+      useProxy: true,
     });
 
     const result = await AuthSession.startAsync({
