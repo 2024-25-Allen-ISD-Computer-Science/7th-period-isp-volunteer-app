@@ -1,11 +1,29 @@
-// components/AuthComponent.js
+// components/AuthScreen.js
 import React, { useState } from "react";
 import { View, Button, TextInput, StyleSheet } from "react-native";
-import { signUpWithEmail, signInWithEmail, signInWithGoogle } from "../auth"; // Adjust the import path
+import { signUpWithEmail, signInWithEmail, signInWithGoogle } from "../auth";
 
-const AuthScreen = () => {
+const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const handleSignUp = async () => {
+    try {
+      await signUpWithEmail(email, password);
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithEmail(email, password);
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -23,8 +41,8 @@ const AuthScreen = () => {
         secureTextEntry
         style={styles.input}
       />
-      <Button title="Sign Up" onPress={() => signUpWithEmail(email, password)} />
-      <Button title="Sign In" onPress={() => signInWithEmail(email, password)} />
+      <Button title="Sign Up" onPress={handleSignUp} />
+      <Button title="Sign In" onPress={handleSignIn} />
       <Button title="Sign In with Google" onPress={signInWithGoogle} />
     </View>
   );

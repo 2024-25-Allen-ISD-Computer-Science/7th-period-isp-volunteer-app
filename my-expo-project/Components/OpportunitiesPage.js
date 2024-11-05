@@ -40,9 +40,15 @@ const OpportunitiesPage = () => {
         <View key={index} style={styles.opportunity}>
           <Text style={styles.opportunityTitle}>{opportunity.title}</Text>
           <Text>{opportunity.description}</Text>
-          <Text><strong>Location:</strong> {opportunity.location}</Text>
-          <Text><strong>Time Commitment:</strong> {opportunity.timeCommitment}</Text>
-          <Text><strong>Contact:</strong> {opportunity.contact}</Text>
+          <Text>
+            <Text style={styles.boldText}>Location:</Text> {opportunity.location}
+          </Text>
+          <Text>
+            <Text style={styles.boldText}>Time Commitment:</Text> {opportunity.timeCommitment}
+          </Text>
+          <Text>
+            <Text style={styles.boldText}>Contact:</Text> {opportunity.contact}
+          </Text>
         </View>
       ))}
     </ScrollView>
@@ -75,7 +81,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 4,
   },
+  boldText: {
+    fontWeight: 'bold',
+  },
 });
 
 export default OpportunitiesPage;
-
