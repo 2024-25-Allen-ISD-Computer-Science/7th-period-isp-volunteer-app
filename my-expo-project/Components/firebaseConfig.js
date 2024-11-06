@@ -1,8 +1,6 @@
-// firebaseConfig.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth"; // Import the authentication module
+import { initializeApp, getApp, getApps } from 'firebase/app';
+import { getAuth } from 'firebase/auth'; 
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBgjCXVcfUcInJ3u3jUYrpBR_rGd3uVi-c",
   authDomain: "helphive-a462e.firebaseapp.com",
@@ -13,11 +11,8 @@ const firebaseConfig = {
   measurementId: "G-7484DRXG0Y"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase Authentication
-const auth = getAuth(app); 
+const auth = getAuth(app);
 
 export { auth };
-
