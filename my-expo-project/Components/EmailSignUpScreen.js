@@ -24,7 +24,7 @@ const EmailSignUpScreen = ({ navigation }) => {
         firstName,
         lastName,
         dob,
-        phone,
+        phoneNumber,
         email,
         accountType, // Save the selected account type
       });
@@ -61,8 +61,8 @@ const EmailSignUpScreen = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Phone Number"
-        value={phone}
-        onChangeText={setPhone}
+        value={phoneNumber}
+        onChangeText={setPhoneNumber}
         keyboardType="phone-pad"
       />
       <TextInput
