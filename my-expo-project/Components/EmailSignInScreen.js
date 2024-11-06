@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
-import { auth } from './firebaseConfig'; // Ensure this path is correct
+import { auth } from './firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const EmailSignInScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-const handleSignIn = async () => {
-  console.log("Attempting to sign in...");
-  try {
-    console.log("Email:", email);
-    console.log("Password:", password);
-    
-    await auth.signInWithEmailAndPassword(email, password);
-    
-    Alert.alert('Success', 'User signed in successfully');
-    navigation.navigate('HomePage'); // Navigate to HomePage after sign-in
-  } catch (error) {
-    console.log("Sign-in error:", error.message);
-    Alert.alert('Error', error.message);
-  }
-};
+  const handleSignIn = async () => {
+    console.log("Attempting to sign in...");
+    console.log(auth);
+    if (!auth) {
+      console.log("Firebase auth is not initialized correctly.");
+      Alert.alert('Error', 'Firebase auth not initialized.');
+      return;
+    }
 
+    try {
+      console.log("Email:", email);
+      console.log("Password:", password);
+
+      await signInWithEmailAndPassword(auth, email, password);
+
+      Alert.alert('Success', 'User signed in successfully');
+      navigation.navigate('HomePage');
+    } catch (error) {
+      console.log("Sign-in error:", error.message);
+      Alert.alert('Error', error.message);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -46,7 +53,7 @@ const handleSignIn = async () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.goBack()} // Navigate back to AuthScreen
+        onPress={() => navigation.goBack()}
       >
         <Text style={styles.buttonText}>Back</Text>
       </TouchableOpacity>
