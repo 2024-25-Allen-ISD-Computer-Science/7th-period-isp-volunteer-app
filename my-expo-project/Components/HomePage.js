@@ -1,29 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { auth, firestore } from './firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
 
 const HomePage = ({ navigation }) => {
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(firestore, 'users', user.uid); // Reference to the user's document in Firestore
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setUserName(`${data.firstName}`); // Set the name as first name
+        } else {
+          setUserName('Guest');
+        }
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome,</Text>
+      <Text style={styles.title}>Welcome, {userName}!</Text>
       <Text style={styles.body}>How do you want to help your community today?</Text>
-      
+
       <TouchableOpacity 
         style={styles.box} 
+        onPress={() => navigation.navigate('ProfileScreen')}
+      >
+        <Text style={styles.boxText}>View Profile</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.box}
         onPress={() => navigation.navigate('Opportunities')}
       >
         <Text style={styles.boxText}>Find Opportunities</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.box} 
+      <TouchableOpacity
+        style={styles.box}
         onPress={() => navigation.navigate('LogHours')}
       >
         <Text style={styles.boxText}>Log Your Hours</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.box} 
+      <TouchableOpacity
+        style={styles.box}
         onPress={() => navigation.navigate('Communities')}
       >
         <Text style={styles.boxText}>Communities...</Text>

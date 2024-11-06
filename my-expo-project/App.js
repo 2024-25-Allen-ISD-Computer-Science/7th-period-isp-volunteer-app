@@ -5,17 +5,20 @@ import AuthScreen from './Components/AuthScreen';
 import EmailSignUpScreen from './Components/EmailSignUpScreen';
 import EmailSignInScreen from './Components/EmailSignInScreen';
 import HomePage from './Components/HomePage';
+import ProfileScreen from './Components/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Auth">
+      <Stack.Navigator initialRouteName="Main">
         <Stack.Screen name="Auth" component={AuthScreen} />
         <Stack.Screen name="EmailSignUp" component={EmailSignUpScreen} />
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="HomePage" component={HomePage} />
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
