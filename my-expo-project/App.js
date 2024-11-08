@@ -6,6 +6,7 @@ import EmailSignUpScreen from './Components/EmailSignUpScreen';
 import EmailSignInScreen from './Components/EmailSignInScreen';
 import HomePage from './Components/HomePage';
 import ProfileScreen from './Components/ProfileScreen';
+import CommunityScreen from './Components/CommunitiesPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,7 +19,8 @@ const App = () => {
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="HomePage" component={HomePage} />
         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-
+        <Stack.Screen name="Communities" component={CommunityScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );
