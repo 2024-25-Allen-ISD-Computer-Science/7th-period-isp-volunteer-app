@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react
 import { firestore, auth } from './firebaseConfig';
 import { collection, getDocs, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
-const CommunityScreen = () => {
+const CommunityScreen = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
   const [joinedCommunities, setJoinedCommunities] = useState([]);
 
@@ -64,6 +64,12 @@ const CommunityScreen = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate('HomePage')}      
+        >
+        <Text style={styles.buttonText}>Back to Home</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Communities</Text>
       <FlatList
         data={communities}
@@ -123,6 +129,22 @@ const styles = StyleSheet.create({
     color: 'green',
     fontWeight: 'bold',
   },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 25,               
+    right: 20,            
+    backgroundColor: '#1f91d6',  
+    paddingVertical: 10,  
+    paddingHorizontal: 20, 
+    borderRadius: 5,      
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+
 });
 
 export default CommunityScreen;

@@ -121,6 +121,12 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate('HomePage')}      
+        >
+        <Text style={styles.buttonText}>Back to Home</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Profile</Text>
 
       <View style={styles.profileImageContainer}>
@@ -224,6 +230,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
   },
+  backButton: {
+    position: 'absolute',
+    top: 40,               
+    right: 20,            
+    backgroundColor: '#1f91d6',  
+    paddingVertical: 10,  
+    paddingHorizontal: 20, 
+    borderRadius: 5,      
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+
+
 });
 
 export default ProfileScreen;
