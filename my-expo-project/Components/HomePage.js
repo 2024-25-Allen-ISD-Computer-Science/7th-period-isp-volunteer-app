@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
+import { getAuth, signOut } from "firebase/auth";
+
 
 const HomePage = ({ navigation }) => {
   const [userName, setUserName] = useState('');
@@ -25,9 +27,31 @@ const HomePage = ({ navigation }) => {
 
     fetchUserData();
   }, []);
+  
+
+  //Logic behind sign out button
+  const handleSignOut = () => {
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        // Navigate to the authentication screen after successful sign out
+        navigation.navigate('Auth');
+      })
+      .catch((error) => {
+        console.error("Sign-out error:", error);
+      });
+  };
+  
 
   return (
     <View style={styles.container}>
+      {/* Creating a red Sign Out Button in the top right corner of the page*/}
+      <TouchableOpacity
+        style={styles.signOutButton}
+        onPress={handleSignOut}
+      >
+        <Text style={styles.signOutText}>Sign Out</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Welcome, {userName}!</Text>
       <Text style={styles.body}>How do you want to help your community today?</Text>
 
@@ -93,6 +117,21 @@ const styles = StyleSheet.create({
   boxText: {
     color: '#443939',
     fontSize: 18,
+  },
+  signOutButton: {
+    position: 'absolute',
+    top: 40,               
+    right: 20,            
+    backgroundColor: '#ff4c4c',  
+    paddingVertical: 10,  
+    paddingHorizontal: 20, 
+    borderRadius: 5,      
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+  signOutText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
