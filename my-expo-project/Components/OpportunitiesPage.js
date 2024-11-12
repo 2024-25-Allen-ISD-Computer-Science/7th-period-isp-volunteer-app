@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 
 const opportunities = [
   {
@@ -32,9 +32,15 @@ const opportunities = [
   },
 ];
 
-const OpportunitiesPage = () => {
+const OpportunitiesPage = ({navigation}) => {
   return (
     <ScrollView style={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate('HomePage')}      
+        >
+        <Text style={styles.buttonText}>Back to Home</Text>
+      </TouchableOpacity>
       <Text style={styles.title}>Volunteering Opportunities</Text>
       {opportunities.map((opportunity, index) => (
         <View key={index} style={styles.opportunity}>
@@ -75,6 +81,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
+    top: 50,
   },
   opportunityTitle: {
     fontSize: 18,
@@ -83,6 +90,21 @@ const styles = StyleSheet.create({
   },
   boldText: {
     fontWeight: 'bold',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,               
+    right: 20,            
+    backgroundColor: '#1f91d6',  
+    paddingVertical: 10,  
+    paddingHorizontal: 20, 
+    borderRadius: 5,      
+    alignItems: 'center', 
+    justifyContent: 'center',
   },
 });
 
