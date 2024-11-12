@@ -105,6 +105,7 @@ const styles = StyleSheet.create({
   },
   communityBox: {
     backgroundColor: '#fff',
+    top: 50,
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 25,               
+    top: 40,               
     right: 20,            
     backgroundColor: '#1f91d6',  
     paddingVertical: 10,  
