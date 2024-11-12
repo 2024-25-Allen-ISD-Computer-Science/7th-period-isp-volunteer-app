@@ -37,24 +37,26 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   const pickImage = async () => {
-    // Ask for permission to access the gallery
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
-      Alert.alert('Permission required', 'You need to grant permission to access the gallery.');
-      return;
-    }
-
-    // Launch the image picker
-    let pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!pickerResult.canceled) {
-      setProfilePicture(pickerResult.assets[0].uri); // Save the picked image URI
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission required', 'You need to grant permission to access the gallery.');
+        return;
+      }
+  
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+  
+      if (!pickerResult.canceled) {
+        setProfilePicture(pickerResult.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Error', `Failed to pick image: ${error.message}`);
     }
   };
 
@@ -63,28 +65,33 @@ const ProfileScreen = ({ navigation }) => {
       Alert.alert('No image selected', 'Please select an image first.');
       return;
     }
-
-    const uri = profilePicture;
-    const blob = await fetch(uri).then((response) => response.blob()); // Convert image URI to blob
-
-    const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
-    const uploadTask = uploadBytesResumable(storageRef, blob); // Upload the image to Firebase Storage
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-      },
-      (error) => {
-        Alert.alert('Upload Error', 'Error uploading profile picture: ' + error.message);
-      },
-      () => {
-        // Get the URL of the uploaded image and save it in Firestore
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          updateProfilePictureURL(downloadURL);
-        });
-      }
-    );
+  
+    try {
+      const response = await fetch(profilePicture);
+      const blob = await response.blob();
+  
+      const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+  
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress}% done`);
+        },
+        (error) => {
+          Alert.alert('Upload failed', error.message);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          updateProfilePictureURL(downloadURL); // Firestore Update
+        }
+      );
+    } catch (error) {
+      Alert.alert('Error', `Image upload failed: ${error.message}`);
+    }
   };
+  
 
   const updateProfilePictureURL = async (url) => {
     try {
