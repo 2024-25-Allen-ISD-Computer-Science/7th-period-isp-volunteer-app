@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "my-expo-project",
-    "slug": "my-expo-project",
+    "name": "helphive",
+    "slug": "helphive",
     "version": "1.0.0",
     "extra": {
       "FIREBASE_API_KEY": "your-api-key",
-      "FIREBASE_AUTH_DOMAIN": "your-auth-domain",
-      "FIREBASE_PROJECT_ID": "your-project-id",
-      "FIREBASE_STORAGE_BUCKET": "your-storage-bucket",
-      "FIREBASE_MESSAGING_SENDER_ID": "your-messaging-sender-id",
-      "FIREBASE_APP_ID": "your-app-id"
+      "FIREBASE_AUTH_DOMAIN": "helphive-a462e.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "helphive-a462e",
+      "FIREBASE_STORAGE_BUCKET": "helphive-a462e.appspot.com",
+      "FIREBASE_MESSAGING_SENDER_ID": "677989373634",
+      "FIREBASE_APP_ID": "1:677989373634:web:3eb81eea21118cd3fa8d5b",
+      "FIREBASE_MEASUREMENT_ID": "G-7484DRXG0Y"
     }
   }
 }
+
 

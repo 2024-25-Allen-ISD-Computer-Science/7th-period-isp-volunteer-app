@@ -1,26 +1,41 @@
-// Components/AuthScreen.js
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'; // Firebase imports
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AuthScreen = ({ navigation }) => {
+  // Google Auth Request setup
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "677989373634-q2fcqge8cm87q2ctm95e281sehdou3mm.apps.googleusercontent.com", // Replace with your actual client ID
+    clientId: "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;
       console.log("Google authentication successful:", authentication);
-      // Handle further Firebase authentication here if needed
+
+      // Firebase authentication using Google credentials
+      const auth = getAuth(); // Get Firebase auth instance
+      const credential = GoogleAuthProvider.credential(authentication.idToken, authentication.accessToken);
+      
+      signInWithCredential(auth, credential)
+        .then((userCredential) => {
+          console.log("Firebase user signed in:", userCredential.user);
+          // Navigate to home or desired screen
+          navigation.navigate('Home');
+        })
+        .catch((error) => {
+          console.error("Error during Firebase sign-in:", error);
+          Alert.alert("Authentication Error", "Failed to sign in with Google.");
+        });
     }
   }, [response]);
 
   const handleGoogleSignIn = () => {
-    promptAsync();
+    promptAsync(); // Initiates Google sign-in
   };
 
   const handleEmailSignUp = () => {
@@ -29,24 +44,6 @@ const AuthScreen = ({ navigation }) => {
 
   const handleEmailSignIn = () => {
     navigation.navigate('EmailSignIn'); // Navigate to the EmailSignInScreen
-  }
-
-  const handleSignUp = async () => {
-    try {
-      await signUpWithEmail(email, password);
-      navigation.navigate('Home');
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleSignIn = async () => {
-    try {
-      await signInWithEmail(email, password);
-      navigation.navigate('Home');
-    } catch (error) {
-      console.error(error);
-    }
   };
 
   return (
@@ -92,4 +89,3 @@ const styles = StyleSheet.create({
 });
 
 export default AuthScreen;
-
