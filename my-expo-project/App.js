@@ -6,11 +6,17 @@ import EmailSignUpScreen from './Components/EmailSignUpScreen';
 import EmailSignInScreen from './Components/EmailSignInScreen';
 import HomePage from './Components/HomePage';
 import ProfileScreen from './Components/ProfileScreen';
+import { AppRegistry } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+
+
+
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
+    <PaperProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Main">
         <Stack.Screen name="Auth" component={AuthScreen} />
@@ -21,6 +27,7 @@ const App = () => {
 
       </Stack.Navigator>
     </NavigationContainer>
+    </PaperProvider>
   );
 };
 
