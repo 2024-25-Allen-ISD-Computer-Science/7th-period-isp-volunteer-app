@@ -8,9 +8,7 @@ import HomePage from './Components/HomePage';
 import ProfileScreen from './Components/ProfileScreen';
 import { AppRegistry } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
-
-
-
+import CommunityScreen from './Components/CommunitiesPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +22,8 @@ const App = () => {
         <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen name="HomePage" component={HomePage} />
         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-
+        <Stack.Screen name="Communities" component={CommunityScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>
