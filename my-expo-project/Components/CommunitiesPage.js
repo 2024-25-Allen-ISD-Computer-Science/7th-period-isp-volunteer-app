@@ -36,16 +36,27 @@ const CommunityScreen = ({ navigation }) => {
   const joinCommunity = async (communityId) => {
     try {
       const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+  
+      // Check if the user has already joined this community
+      if (joinedCommunities.some((c) => c.communityId === communityId)) {
+        Alert.alert('Info', 'You have already joined this community.');
+        return;
+      }
+  
+      // Update Firestore
       await updateDoc(userDocRef, {
-        joinedCommunities: arrayUnion({ communityId, hoursLogged: 0 })
+        joinedCommunities: arrayUnion({ communityId, hoursLogged: 0 }),
       });
-
+  
       Alert.alert('Success', `You have joined the community!`);
-      setJoinedCommunities(prev => [...prev, { communityId, hoursLogged: 0 }]);
+      
+      // Update local state to reflect the changes
+      setJoinedCommunities((prev) => [...prev, { communityId, hoursLogged: 0 }]);
     } catch (error) {
       Alert.alert('Error', 'Failed to join community: ' + error.message);
     }
   };
+  
 
   const renderCommunity = ({ item }) => (
     <View style={styles.communityBox}>
