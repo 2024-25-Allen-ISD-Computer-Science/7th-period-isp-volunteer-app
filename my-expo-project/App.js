@@ -9,6 +9,7 @@ import ProfileScreen from './Components/ProfileScreen';
 import { AppRegistry } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import CommunityScreen from './Components/CommunitiesPage';
+import OpportunityScreen from './Components/OpportunitiesPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,8 @@ const App = () => {
         <Stack.Screen options={{ headerShown: false }} name="HomePage" component={HomePage} />
         <Stack.Screen options={{ headerShown: false }} name="ProfileScreen" component={ProfileScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Communities" component={CommunityScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Opportunities" component={OpportunityScreen} />
+
         
       </Stack.Navigator>
     </NavigationContainer>
