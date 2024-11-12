@@ -17,12 +17,12 @@ const App = () => {
     <PaperProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Main">
-        <Stack.Screen name="Auth" component={AuthScreen} />
-        <Stack.Screen name="EmailSignUp" component={EmailSignUpScreen} />
-        <Stack.Screen name="EmailSignIn" component={EmailSignInScreen} />
-        <Stack.Screen name="HomePage" component={HomePage} />
-        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-        <Stack.Screen name="Communities" component={CommunityScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Auth" component={AuthScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="EmailSignUp" component={EmailSignUpScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="EmailSignIn" component={EmailSignInScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="HomePage" component={HomePage} />
+        <Stack.Screen options={{ headerShown: false }} name="ProfileScreen" component={ProfileScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="Communities" component={CommunityScreen} />
         
       </Stack.Navigator>
     </NavigationContainer>
