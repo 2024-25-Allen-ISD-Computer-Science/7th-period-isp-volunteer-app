@@ -15,6 +15,15 @@ const EmailSignUpScreen = ({ navigation }) => {
   const [accountType, setAccountType] = useState('student'); // Default to 'student'
 
   const handleSignUp = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Email and Password are required.');
+      return;
+    }
+    
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long.');
+      return;
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const userId = userCredential.user.uid;
