@@ -10,12 +10,22 @@ import { AppRegistry } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import CommunityScreen from './Components/CommunitiesPage';
 import OpportunityScreen from './Components/OpportunitiesPage';
+import { DefaultTheme } from 'react-native-paper';
 
 const Stack = createNativeStackNavigator();
 
+const theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#1f91d6',
+  },
+};
+
+
 const App = () => {
   return (
-    <PaperProvider>
+    <PaperProvider theme = {theme}>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Main">
         <Stack.Screen options={{ headerShown: false }} name="Auth" component={AuthScreen} />

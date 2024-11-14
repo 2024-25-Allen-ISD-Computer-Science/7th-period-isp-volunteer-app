@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, TextInput, Alert, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Alert, Text, StyleSheet } from 'react-native';
 import { auth, firestore } from './firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { Picker } from '@react-native-picker/picker';
+import { Surface, TextInput, Button, Card, SegmentedButtons, useTheme } from 'react-native-paper';
+
+
 
 const EmailSignUpScreen = ({ navigation }) => {
+  const theme = useTheme();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
@@ -46,114 +49,100 @@ const EmailSignUpScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Email Sign Up</Text>
+    <Surface style={styles.container}>
+      <Card style={styles.card}>
+        <Card.Title title="Email Sign Up" />
+        <Card.Content>
+          <TextInput
+            label="First Name"
+            value={firstName}
+            onChangeText={setFirstName}
+            style={styles.input}
+            backgroundColor='#1685c9'
+          />
+          <TextInput
+            label="Last Name"
+            value={lastName}
+            onChangeText={setLastName}
+            style={styles.input}
+          />
+          <TextInput
+            label="Date of Birth"
+            value={dob}
+            onChangeText={setDob}
+            placeholder="YYYY-MM-DD"
+            style={styles.input}
+          />
+          <TextInput
+            label="Phone Number"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+            style={styles.input}
+          />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+          />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Date of Birth (YYYY-MM-DD)"
-        value={dob}
-        onChangeText={setDob}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Phone Number"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        keyboardType="phone-pad"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+          <Text style={styles.label}>Account Type:</Text>
+          <SegmentedButtons
+            value={accountType}
+            onValueChange={setAccountType}
+            buttons={[
+              { value: 'student', label: 'Student'},
+              { value: 'teacher', label: 'Teacher' },
+            ]}
+            style={styles.segmentedButton}
+          />
 
-      <Text style={styles.label}>Account Type:</Text>
-      <Picker
-        selectedValue={accountType}
-        onValueChange={(itemValue) => setAccountType(itemValue)}
-        style={styles.picker}
-      >
-        <Picker.Item label="Student" value="student" />
-        <Picker.Item label="Teacher" value="teacher" />
-      </Picker>
-
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-        <Text style={styles.buttonText}>Back</Text>
-      </TouchableOpacity>
-    </View>
+          <Button mode="contained" onPress={handleSignUp} style={styles.button}>
+            Sign Up
+          </Button>
+          <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.button}>
+            Back
+          </Button>
+        </Card.Content>
+      </Card>
+    </Surface>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#443939',
+    backgroundColor: '#99c5e0',
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    color: '#D3D3D3',
+  card: {
+    padding: 16,
   },
   input: {
-    height: 40,
-    borderColor: 'gray',
-    color: '#D3D3D3',
-    borderWidth: 1,
     marginBottom: 12,
-    paddingLeft: 8,
+    backgroundColor: '#aacfe6'
   },
   label: {
     fontSize: 16,
-    color: '#D3D3D3',
     marginTop: 10,
     marginBottom: 5,
   },
-  picker: {
-    height: 40,
-    backgroundColor: '#D3D3D3',
-    color: '#443939',
-    marginBottom: 12,
+  segmentedButton: {
+    marginBottom: 16,
   },
   button: {
-    backgroundColor: '#D3D3D3',
-    padding: 15,
-    borderRadius: 5,
-    marginVertical: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#443939',
-    fontSize: 16,
+    marginTop: 10,
   },
 });
 

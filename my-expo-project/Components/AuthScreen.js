@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import { Button, Text, Surface, useTheme } from 'react-native-paper';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'; // Firebase imports
+import { Card, Avatar  } from 'react-native-paper';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AuthScreen = ({ navigation }) => {
+  const theme = useTheme();
   // Google Auth Request setup
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
@@ -47,18 +50,45 @@ const AuthScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign In or Sign Up</Text>
-      <TouchableOpacity style={styles.button} onPress={handleGoogleSignIn}>
-        <Text style={styles.buttonText}>Sign in with Google</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleEmailSignUp}>
-        <Text style={styles.buttonText}>Sign up with Email</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleEmailSignIn}>
-        <Text style={styles.buttonText}>Sign In with Email</Text>
-      </TouchableOpacity>
-    </View>
+    <Surface style={styles.container}>
+      <Card style={styles.card}>
+        <Card.Title
+          title="Welcome"
+          subtitle="Choose your sign-in method"
+          left={(props) => <Avatar.Icon {...props} icon="account" />}
+        />
+        <Card.Content>
+          <Text variant="headlineSmall" style={styles.title}>Sign In or Sign Up</Text>
+          <Button
+            mode="contained"
+            onPress={handleGoogleSignIn}
+            style={styles.button}
+            icon="google"
+          >
+            Sign in with Google
+          </Button>
+
+          {/* Button component for email sign-up with icon and outlined style. */} 
+          <Button
+            mode="outlined"
+            onPress={handleEmailSignUp}
+            style={styles.button}
+            icon="email-plus"
+          >
+            Sign up with Email
+          </Button>
+          
+          <Button
+            mode="text"
+            onPress={handleEmailSignIn}
+            style={styles.button}
+            icon="login"
+          >
+            Sign In with Email
+          </Button>
+        </Card.Content>
+      </Card>
+    </Surface>
   );
 };
 
@@ -67,24 +97,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#443939',
+    padding: 16,
+    backgroundColor: '#99c5e0',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
   },
   title: {
-    fontSize: 24,
-    color: '#D3D3D3',
     marginBottom: 20,
+    textAlign: 'center',
   },
   button: {
-    backgroundColor: '#D3D3D3',
-    padding: 15,
-    borderRadius: 5,
-    marginVertical: 10,
-    width: '50%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#443939',
-    fontSize: 16,
+    marginVertical: 8,
   },
 });
 

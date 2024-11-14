@@ -40,7 +40,7 @@ const HomePage = ({ navigation }) => {
       .catch((error) => {
         console.error("Sign-out error:", error);
       });
-  };
+  };  
   
 
   return (
