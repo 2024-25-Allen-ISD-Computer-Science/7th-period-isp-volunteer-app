@@ -9,6 +9,7 @@ import ProfileScreen from './Components/ProfileScreen';
 import { AppRegistry } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import CommunityScreen from './Components/CommunitiesPage';
+import LogHoursScreen from './Components/LogHoursScreen';
 import OpportunityScreen from './Components/OpportunitiesPage';
 import { DefaultTheme } from 'react-native-paper';
 
@@ -34,6 +35,8 @@ const App = () => {
         <Stack.Screen options={{ headerShown: false }} name="HomePage" component={HomePage} />
         <Stack.Screen options={{ headerShown: false }} name="ProfileScreen" component={ProfileScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Communities" component={CommunityScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="LogHours" component={LogHoursScreen} />
+
         <Stack.Screen options={{ headerShown: false }} name="Opportunities" component={OpportunityScreen} />
 
         
