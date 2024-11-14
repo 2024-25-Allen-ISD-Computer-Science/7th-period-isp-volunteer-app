@@ -25,7 +25,7 @@ const App = () => {
         <Stack.Screen options={{ headerShown: false }} name="HomePage" component={HomePage} />
         <Stack.Screen options={{ headerShown: false }} name="ProfileScreen" component={ProfileScreen} />
         <Stack.Screen options={{ headerShown: false }} name="Communities" component={CommunityScreen} />
-        <Stack.Screen options={{ headerShown: false }} name="LogHoursScreen" component={LogHoursScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="LogHours" component={LogHoursScreen} />
 
         <Stack.Screen options={{ headerShown: false }} name="Opportunities" component={OpportunityScreen} />
 

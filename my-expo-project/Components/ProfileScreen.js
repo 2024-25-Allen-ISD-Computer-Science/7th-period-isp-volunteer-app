@@ -11,7 +11,7 @@ const ProfileScreen = ({ navigation }) => {
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
-  const [profilePicture, setProfilePicture] = useState(null); // State for storing image URI
+  const [profilePicture, setProfilePicture] = useState(''); // State for storing image URI
 
   useEffect(() => {
     // Fetch user data from Firestore

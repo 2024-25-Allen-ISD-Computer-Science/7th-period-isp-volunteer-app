@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { firestore, auth } from './firebaseConfig'; // Import firestore and auth from Firebase
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { firestore, auth } from './firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const LogHoursScreen = ({ route, navigation }) => {
-  const { communityId, communityName } = route.params;  // Get community info passed from previous screen
+  const [joinedCommunities, setJoinedCommunities] = useState([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
+  const [selectedCommunityName, setSelectedCommunityName] = useState('');
   const [hours, setHours] = useState('');
-  const [userData, setUserData] = useState(null);
 
-  // Fetch user data (hours logged in communities) when screen loads
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          setUserData(userDoc.data());
+          setJoinedCommunities(userDoc.data().joinedCommunities || []);
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data: ' + error.message);
       }
     };
-    
+
     fetchUserData();
   }, []);
 
+  // Handle logging hours for the selected community
   const handleLogHours = async () => {
     if (!hours || isNaN(hours) || Number(hours) <= 0) {
       Alert.alert('Invalid input', 'Please enter a valid number of hours');
@@ -37,42 +37,71 @@ const LogHoursScreen = ({ route, navigation }) => {
       const userData = userDoc.data();
       
       const updatedCommunities = userData.joinedCommunities.map((community) => {
-        if (community.communityId === communityId) {
+        if (community.communityId === selectedCommunityId) {
           return {
             ...community,
-            hoursLogged: community.hoursLogged + parseFloat(hours),  // Add logged hours to the community
+            hoursLogged: community.hoursLogged + parseFloat(hours),  // Update hours locally
           };
         }
         return community;
       });
 
-      // Update the user document with the new logged hours
+      // Update the user document in Firestore
       await updateDoc(userDocRef, {
         joinedCommunities: updatedCommunities,
       });
 
-      Alert.alert('Success', `You have logged ${hours} hours for ${communityName}!`);
-      navigation.goBack(); // Navigate back after success
+      // Update the local state to reflect new hours
+      setJoinedCommunities(updatedCommunities);
+
+      Alert.alert('Success', `You have logged ${hours} hours for ${selectedCommunityName}!`);
+      setHours(''); // Reset input field
     } catch (error) {
       Alert.alert('Error', 'Failed to log hours: ' + error.message);
     }
   };
 
+  const renderCommunity = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.communityBox,
+        item.communityId === selectedCommunityId && styles.selectedBox,
+      ]}
+      onPress={() => {
+        setSelectedCommunityId(item.communityId);
+        setSelectedCommunityName(item.name);  // Set the selected community's name
+      }}
+    >
+      <Text style={styles.communityTitle}>{item.name}</Text>
+      <Text>Hours Logged: {item.hoursLogged || 0}</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Log Hours for {communityName}</Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Enter hours worked"
-        keyboardType="numeric"
-        value={hours}
-        onChangeText={setHours}
+      <Text style={styles.title}>Log Hours</Text>
+      <FlatList
+        data={joinedCommunities}
+        keyExtractor={(item) => item.communityId}
+        renderItem={renderCommunity}
       />
-      
-      <TouchableOpacity style={styles.button} onPress={handleLogHours}>
-        <Text style={styles.buttonText}>Log Hours</Text>
-      </TouchableOpacity>
+
+      {selectedCommunityId && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter hours"
+            keyboardType="numeric"
+            value={hours}
+            onChangeText={setHours}
+          />
+
+          <TouchableOpacity style={styles.logButton} onPress={handleLogHours}>
+            <Text style={styles.logButtonText}>Log Hours</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      {!selectedCommunityId && <Text style={styles.selectCommunityText}>Please select a community to log hours.</Text>}
     </View>
   );
 };
@@ -80,35 +109,51 @@ const LogHoursScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
     padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 10,
+  },
+  communityBox: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 5,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  selectedBox: {
+    borderColor: '#443939',
+    borderWidth: 2,
+  },
+  communityTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   input: {
-    width: '80%',
-    height: 50,
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
-    paddingLeft: 10,
-    fontSize: 16,
-    marginBottom: 20,
+    padding: 10,
+    marginVertical: 10,
+    width: '100%',
   },
-  button: {
+  logButton: {
     backgroundColor: '#443939',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
   },
-  buttonText: {
+  logButtonText: {
     color: '#fff',
+    fontSize: 16,
+  },
+  selectCommunityText: {
+    marginTop: 10,
+    color: '#888',
     fontSize: 16,
   },
 });
