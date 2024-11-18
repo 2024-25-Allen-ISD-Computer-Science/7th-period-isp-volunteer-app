@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { firestore, auth } from './firebaseConfig';
-import { collection, getDocs, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 
 const CommunityScreen = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
@@ -33,7 +33,7 @@ const CommunityScreen = ({ navigation }) => {
     fetchUserData();
   }, []);
 
-  const joinCommunity = async (communityId) => {
+  const joinCommunity = async (communityId, communityName) => {
     try {
       const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
   
@@ -45,18 +45,17 @@ const CommunityScreen = ({ navigation }) => {
   
       // Update Firestore
       await updateDoc(userDocRef, {
-        joinedCommunities: arrayUnion({ communityId, hoursLogged: 0 }),
+        joinedCommunities: arrayUnion({ communityId, name: communityName, hoursLogged: 0 }),
       });
   
-      Alert.alert('Success', `You have joined the community!`);
+      Alert.alert('Success', `You have joined ${communityName}!`);
       
       // Update local state to reflect the changes
-      setJoinedCommunities((prev) => [...prev, { communityId, hoursLogged: 0 }]);
+      setJoinedCommunities((prev) => [...prev, { communityId, name: communityName, hoursLogged: 0 }]);
     } catch (error) {
       Alert.alert('Error', 'Failed to join community: ' + error.message);
     }
   };
-  
 
   const renderCommunity = ({ item }) => (
     <View style={styles.communityBox}>
@@ -66,7 +65,7 @@ const CommunityScreen = ({ navigation }) => {
       {joinedCommunities.some(c => c.communityId === item.id) ? (
         <Text style={styles.joinedText}>Joined</Text>
       ) : (
-        <TouchableOpacity style={styles.joinButton} onPress={() => joinCommunity(item.id)}>
+        <TouchableOpacity style={styles.joinButton} onPress={() => joinCommunity(item.id, item.name)}>
           <Text style={styles.joinButtonText}>Join</Text>
         </TouchableOpacity>
       )}
@@ -77,8 +76,8 @@ const CommunityScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate('HomePage')}      
-        >
+        onPress={() => navigation.navigate('HomePage')}
+      >
         <Text style={styles.buttonText}>Back to Home</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Communities</Text>
@@ -86,6 +85,7 @@ const CommunityScreen = ({ navigation }) => {
         data={communities}
         keyExtractor={(item) => item.id}
         renderItem={renderCommunity}
+        ListEmptyComponent={<Text style={styles.emptyText}>No communities available at the moment.</Text>}
       />
     </View>
   );
@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
   },
   communityBox: {
     backgroundColor: '#fff',
-    top: 50,
     padding: 15,
     borderRadius: 5,
     marginBottom: 10,
@@ -147,16 +146,21 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 40,               
-    right: 20,            
-    backgroundColor: '#1f91d6',  
-    paddingVertical: 10,  
-    paddingHorizontal: 20, 
-    borderRadius: 5,      
-    alignItems: 'center', 
+    top: 40,
+    right: 20,
+    backgroundColor: '#1f91d6',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 20,
+  },
 });
 
 export default CommunityScreen;
