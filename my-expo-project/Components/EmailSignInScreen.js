@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import { TextInput, Button, Paragraph, Appbar, Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
-import { auth } from './firebaseConfig';
+import { auth, firestore } from './firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { useFonts } from 'expo-font'; // For loading fonts
 import AppLoading from 'expo-app-loading'; // For loading screen while fonts are loading
 
@@ -27,9 +28,27 @@ const EmailSignInScreen = ({ navigation }) => {
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Success', 'User signed in successfully');
-      navigation.navigate('HomePage');
+
+      const user = userCredential.user; // Get signed-in user
+      const userDocRef = doc(firestore, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const accountType = userData.accountType;
+
+        if (accountType === 'teacher') {
+          navigation.navigate('TeacherHomePage'); // Navigate to teacher's home page
+        } else if (accountType === 'student') {
+          navigation.navigate('StudentHomePage'); // Navigate to student's home page
+        } else {
+          Alert.alert('Error', 'Invalid account type');
+        }
+      } else {
+        Alert.alert('Error', 'User data not found!');
+      }
     } catch (error) {
       Alert.alert('Error', error.message);
     }
