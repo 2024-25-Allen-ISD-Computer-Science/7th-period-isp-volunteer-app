@@ -5,8 +5,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 const LogHoursScreen = ({ route, navigation }) => {
   const [joinedCommunities, setJoinedCommunities] = useState([]);
-  const [selectedCommunityId, setSelectedCommunityId] = useState(null);
-  const [selectedCommunityName, setSelectedCommunityName] = useState('');
+  const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [hours, setHours] = useState('');
 
   useEffect(() => {
@@ -15,6 +14,8 @@ const LogHoursScreen = ({ route, navigation }) => {
         const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           setJoinedCommunities(userDoc.data().joinedCommunities || []);
+        } else {
+          Alert.alert('Error', 'No communities found.');
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data: ' + error.message);
@@ -24,7 +25,6 @@ const LogHoursScreen = ({ route, navigation }) => {
     fetchUserData();
   }, []);
 
-  // Handle logging hours for the selected community
   const handleLogHours = async () => {
     if (!hours || isNaN(hours) || Number(hours) <= 0) {
       Alert.alert('Invalid input', 'Please enter a valid number of hours');
@@ -37,25 +37,23 @@ const LogHoursScreen = ({ route, navigation }) => {
       const userData = userDoc.data();
       
       const updatedCommunities = userData.joinedCommunities.map((community) => {
-        if (community.communityId === selectedCommunityId) {
+        if (community.communityId === selectedCommunity.communityId) {
           return {
             ...community,
-            hoursLogged: community.hoursLogged + parseFloat(hours),  // Update hours locally
+            hoursLogged: (community.hoursLogged || 0) + parseFloat(hours),
           };
         }
         return community;
       });
 
-      // Update the user document in Firestore
       await updateDoc(userDocRef, {
         joinedCommunities: updatedCommunities,
       });
 
-      // Update the local state to reflect new hours
       setJoinedCommunities(updatedCommunities);
 
-      Alert.alert('Success', `You have logged ${hours} hours for ${selectedCommunityName}!`);
-      setHours(''); // Reset input field
+      Alert.alert('Success', `You have logged ${hours} hours for ${selectedCommunity.communityName}!`);
+      setHours(''); 
     } catch (error) {
       Alert.alert('Error', 'Failed to log hours: ' + error.message);
     }
@@ -65,14 +63,13 @@ const LogHoursScreen = ({ route, navigation }) => {
     <TouchableOpacity
       style={[
         styles.communityBox,
-        item.communityId === selectedCommunityId && styles.selectedBox,
+        item.communityId === selectedCommunity?.communityId && styles.selectedBox,
       ]}
       onPress={() => {
-        setSelectedCommunityId(item.communityId);
-        setSelectedCommunityName(item.name);  // Set the selected community's name
+        setSelectedCommunity(item);  // Set the entire community object as selected
       }}
     >
-      <Text style={styles.communityTitle}>{item.name}</Text>
+      <Text style={styles.communityTitle}>{item.communityName}</Text> 
       <Text>Hours Logged: {item.hoursLogged || 0}</Text>
     </TouchableOpacity>
   );
@@ -80,14 +77,25 @@ const LogHoursScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Log Hours</Text>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate('HomePage')}
+      >
+        <Text style={styles.buttonText}>Back to Home</Text>
+      </TouchableOpacity>
+
       <FlatList
         data={joinedCommunities}
         keyExtractor={(item) => item.communityId}
         renderItem={renderCommunity}
+        ListEmptyComponent={<Text>No communities found.</Text>}
       />
 
-      {selectedCommunityId && (
+      {selectedCommunity ? (
         <>
+          <Text style={styles.selectedCommunityText}>
+            Logging hours for: {selectedCommunity.communityName}
+          </Text>
           <TextInput
             style={styles.input}
             placeholder="Enter hours"
@@ -95,13 +103,13 @@ const LogHoursScreen = ({ route, navigation }) => {
             value={hours}
             onChangeText={setHours}
           />
-
           <TouchableOpacity style={styles.logButton} onPress={handleLogHours}>
             <Text style={styles.logButtonText}>Log Hours</Text>
           </TouchableOpacity>
         </>
+      ) : (
+        <Text style={styles.selectCommunityText}>Select a community.</Text>
       )}
-      {!selectedCommunityId && <Text style={styles.selectCommunityText}>Please select a community to log hours.</Text>}
     </View>
   );
 };
@@ -133,6 +141,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  selectedCommunityText: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
   input: {
     borderColor: '#ccc',
     borderWidth: 1,
@@ -155,6 +169,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#888',
     fontSize: 16,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    backgroundColor: '#1f91d6',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
   },
 });
 
