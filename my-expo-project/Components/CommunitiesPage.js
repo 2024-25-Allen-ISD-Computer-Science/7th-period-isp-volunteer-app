@@ -45,13 +45,13 @@ const CommunityScreen = ({ navigation }) => {
   
       // Update Firestore
       await updateDoc(userDocRef, {
-        joinedCommunities: arrayUnion({ communityId, name: communityName, hoursLogged: 0 }),
+        joinedCommunities: arrayUnion({ communityId, communityName, hoursLogged: 0 }),
       });
   
       Alert.alert('Success', `You have joined ${communityName}!`);
       
       // Update local state to reflect the changes
-      setJoinedCommunities((prev) => [...prev, { communityId, name: communityName, hoursLogged: 0 }]);
+      setJoinedCommunities((prev) => [...prev, { communityId, communityName: communityName, hoursLogged: 0 }]);
     } catch (error) {
       Alert.alert('Error', 'Failed to join community: ' + error.message);
     }
@@ -59,13 +59,13 @@ const CommunityScreen = ({ navigation }) => {
 
   const renderCommunity = ({ item }) => (
     <View style={styles.communityBox}>
-      <Text style={styles.communityTitle}>{item.name}</Text>
+      <Text style={styles.communityTitle}>{item.communityName}</Text>
       <Text style={styles.communityDescription}>{item.description}</Text>
       <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
       {joinedCommunities.some(c => c.communityId === item.id) ? (
         <Text style={styles.joinedText}>Joined</Text>
       ) : (
-        <TouchableOpacity style={styles.joinButton} onPress={() => joinCommunity(item.id, item.name)}>
+        <TouchableOpacity style={styles.joinButton} onPress={() => joinCommunity(item.id, item.communityName)}>
           <Text style={styles.joinButtonText}>Join</Text>
         </TouchableOpacity>
       )}
@@ -76,7 +76,7 @@ const CommunityScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate('HomePage')}
+        onPress={() => navigation.navigate('StudentHomePage')}
       >
         <Text style={styles.buttonText}>Back to Home</Text>
       </TouchableOpacity>

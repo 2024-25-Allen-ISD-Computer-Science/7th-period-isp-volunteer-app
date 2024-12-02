@@ -123,7 +123,7 @@ const ProfileScreen = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate('HomePage')}      
+        onPress={() => navigation.navigate('StudentHomePage')}      
         >
         <Text style={styles.buttonText}>Back to Home</Text>
       </TouchableOpacity>
