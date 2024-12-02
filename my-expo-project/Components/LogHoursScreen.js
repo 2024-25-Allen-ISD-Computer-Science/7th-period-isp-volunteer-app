@@ -79,7 +79,7 @@ const LogHoursScreen = ({ route, navigation }) => {
       <Text style={styles.title}>Log Hours</Text>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.navigate('HomePage')}
+        onPress={() => navigation.navigate('StudentHomePage')}
       >
         <Text style={styles.buttonText}>Back to Home</Text>
       </TouchableOpacity>
