@@ -9,7 +9,7 @@ const ManageCommunities = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // New community input fields
-  const [name, setName] = useState('');
+  const [communityName, setCommunityName] = useState('');
   const [description, setDescription] = useState('');
   const [hourGoal, setHourGoal] = useState('');
 
@@ -35,7 +35,7 @@ const ManageCommunities = ({ navigation }) => {
     const user = auth.currentUser;
     if (user) {
       // Validate input
-      if (!name || !description || !hourGoal) {
+      if (!communityName || !description || !hourGoal) {
         Alert.alert('Error', 'Please fill in all fields');
         return;
       }
@@ -50,7 +50,7 @@ const ManageCommunities = ({ navigation }) => {
 
         // New community data
         const newCommunity = {
-          name,
+          communityName,
           description,
           hourGoal: Number(hourGoal),
           createdBy: user.uid, // Teacher's UID
@@ -62,7 +62,7 @@ const ManageCommunities = ({ navigation }) => {
         setIsLoading(false);
 
         // Clear input fields
-        setName('');
+        setCommunityName('');
         setDescription('');
         setHourGoal('');
 
@@ -89,8 +89,8 @@ const ManageCommunities = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Community Name"
-        value={name}
-        onChangeText={setName}
+        value={communityName}
+        onChangeText={setCommunityName}
       />
       <TextInput
         style={styles.input}
@@ -124,7 +124,7 @@ const ManageCommunities = ({ navigation }) => {
             style={styles.communityBox}
             onPress={() => handleCommunityClick(item.id)}
           >
-            <Text style={styles.communityName}>{item.name}</Text>
+            <Text style={styles.communityName}>{item.communityName}</Text>
             <Text style={styles.communityDescription}>{item.description}</Text>
             <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
           </TouchableOpacity>
