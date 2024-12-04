@@ -12,7 +12,7 @@ const TeacherHomePage = ({ navigation }) => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(firestore, 'teachers', user.uid); // Reference to the teacher's document in Firestore
+        const userDocRef = doc(firestore, 'users', user.uid); // Reference to the teacher's document in Firestore
         const docSnap = await getDoc(userDocRef);
 
         if (docSnap.exists()) {
