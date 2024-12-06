@@ -9,6 +9,7 @@ const CreateOpportunities = ({ navigation }) => {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [hourValue, setHourValue] = useState('');
+  const [maxSignUps, setMaxSignUps] = useState(''); // New state for maximum sign-ups
   const [communities, setCommunities] = useState([]);
   const [selectedCommunity, setSelectedCommunity] = useState('');
 
@@ -23,7 +24,7 @@ const CreateOpportunities = ({ navigation }) => {
 
         const fetchedCommunities = [];
         querySnapshot.forEach((doc) => {
-          fetchedCommunities.push({ id: doc.id, name: doc.data().name });
+          fetchedCommunities.push({ id: doc.id, communityName: doc.data().communityName });
         });
 
         setCommunities(fetchedCommunities);
@@ -47,6 +48,8 @@ const CreateOpportunities = ({ navigation }) => {
           date,
           time,
           hourValue: parseInt(hourValue, 10),
+          maxSignUps: parseInt(maxSignUps, 10), // Add maxSignUps to the data
+          currentSignUps: 0, // Initialize the current sign-ups as 0
           communityId: selectedCommunity,
           createdBy: user.uid,
         };
@@ -108,6 +111,15 @@ const CreateOpportunities = ({ navigation }) => {
         onChangeText={setHourValue}
       />
 
+      {/* Max Sign-Ups Input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Maximum Sign-Ups"
+        value={maxSignUps}
+        keyboardType="numeric"
+        onChangeText={setMaxSignUps}
+      />
+
       {/* Community Picker */}
       <Text style={styles.label}>Assign to Community:</Text>
       <Picker
@@ -116,7 +128,7 @@ const CreateOpportunities = ({ navigation }) => {
         style={styles.picker}
       >
         {communities.map((community) => (
-          <Picker.Item key={community.id} label={community.name} value={community.id} />
+          <Picker.Item key={community.id} label={community.communityName} value={community.id} />
         ))}
       </Picker>
 
@@ -172,4 +184,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateOpportunites;
+export default CreateOpportunities;
