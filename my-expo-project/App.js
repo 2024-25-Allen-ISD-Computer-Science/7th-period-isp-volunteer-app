@@ -19,6 +19,7 @@ import ManageCommunities from './Components/Teachers/ManageCommunities';
 import CreateOpportunities from './Components/Teachers/CreateOpportunities';
 import { ScreenStackHeaderLeftView } from 'react-native-screens';
 
+
 const theme = {
   ...DefaultTheme,
   colors: {
