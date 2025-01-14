@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Switch, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Image, Switch, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { firestore, storage } from './firebaseConfig';
@@ -30,7 +30,8 @@ const ProfileScreen = ({ navigation }) => {
           setEmail(userData.email || 'Email not provided');
           setPhoneNumber(userData.phoneNumber || 'Phone not provided');
           setProfilePicture(userData.profilePicture || '');
-        } else {
+          console.log('Profile Picture URL:', userData.profilePicture); // Debugging: Log URL
+        } else {  
           Alert.alert('Error', 'User data not found!');
         }
       } catch (error) {
@@ -42,11 +43,6 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission required', 'You need to grant permission to access the gallery.');
-      return;
-    }
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -54,31 +50,59 @@ const ProfileScreen = ({ navigation }) => {
       quality: 1,
     });
     if (!pickerResult.canceled) {
-      setProfilePicture(pickerResult.assets[0].uri);
+      const uri = pickerResult.assets[0].uri;
+      console.log('Picked image URI:', uri); // Debugging
+      setProfilePicture(uri); // Update state
+      uploadProfilePicture(uri); // Explicitly call uploadProfilePicture
     }
   };
 
-  const uploadProfilePicture = async () => {
+  const handleFieldUpdate = async (field, value) => {
+    try {
+      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      await updateDoc(userDocRef, { [field]: value });
+      Alert.alert('Saved', `${field} updated successfully!`);
+    } catch (error) {
+      Alert.alert('Error', `Failed to update ${field}: ${error.message}`);
+    }
+  };
+
+  const uploadProfilePicture = async (uri) => {
+    console.log('uploadProfilePicture called'); // Debug
+
     if (!profilePicture) {
       Alert.alert('No image selected', 'Please select an image first.');
       return;
     }
-    const response = await fetch(profilePicture);
-    const blob = await response.blob();
-    const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
-    const uploadTask = uploadBytesResumable(storageRef, blob);
-    uploadTask.on(
-      'state_changed',
-      () => {},
-      (error) => Alert.alert('Upload failed', error.message),
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
-        await updateDoc(userDocRef, { profilePicture: downloadURL });
-        setProfilePicture(downloadURL);
-        Alert.alert('Success', 'Profile picture updated!');
-      }
-    );
+    try {
+      const response = await fetch(profilePicture);
+      const blob = await response.blob();
+      const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+  
+      uploadTask.on(
+        'state_changed',
+        null,
+        (error) => {
+          console.error('Upload failed:', error.message);
+          Alert.alert('Upload failed', error.message);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('Download URL:', downloadURL); // Debug: Log the URL
+  
+          const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+          await updateDoc(userDocRef, { profilePicture: downloadURL }); // Save to Firestore
+          console.log('Profile picture updated in Firestore.'); // Debug: Log success
+  
+          setProfilePicture(downloadURL); // Update local state
+          Alert.alert('Success', 'Profile picture updated!');
+        }
+      );
+    } catch (error) {
+      console.error('Error during upload:', error.message);
+      Alert.alert('Error', `Image upload failed: ${error.message}`);
+    }
   };
 
   const handleSignOut = () => {
@@ -124,17 +148,43 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>About Me</Text>
         <TouchableOpacity style={styles.row}>
           <MaterialIcons name="person-outline" size={24} color="#FFF" />
-          <Text style={styles.rowText}>
-            {firstName} {lastName}
-          </Text>
+          <TextInput style={styles.rowText} value={firstName}
+            onChangeText={(value) => {
+            setFirstName(value);
+            handleFieldUpdate('firstName', value); // Auto-save functionality (first name and last name are separate text fields)
+          }}/>
+          <TextInput
+            style={styles.rowText}
+            value={lastName}
+            onChangeText={(value) => {
+              setLastName(value); //Can change by clicking into it (the value is temporarily and then permanently stored)
+              handleFieldUpdate('lastName', value); // Auto-save functionality
+            }}
+          />
+        
         </TouchableOpacity>
         <TouchableOpacity style={styles.row}>
           <MaterialIcons name="email" size={24} color="#FFF" />
-          <Text style={styles.rowText}>{email}</Text>
+          <TextInput
+            style={styles.rowText}
+            value={email}
+            onChangeText={(value) => {
+              setEmail(value); //Can change by clicking into it (the value is temporarily and then permanently stored)
+              handleFieldUpdate('email', value); // Auto-save functionality
+            }}
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.row}>
           <MaterialIcons name="phone" size={24} color="#FFF" />
-          <Text style={styles.rowText}>{phoneNumber}</Text>
+          <TextInput
+            style={styles.rowText}
+            value={phoneNumber}
+            keyboardType="phone-pad"
+            onChangeText={(value) => {
+              setPhoneNumber(value); //Can change by clicking into it (the value is temporarily and then permanently stored)
+              handleFieldUpdate('phoneNumber', value); // Auto-save functionality
+            }}
+          />
         </TouchableOpacity>
       </View>
 
