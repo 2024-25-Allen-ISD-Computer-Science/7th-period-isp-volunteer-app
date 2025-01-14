@@ -31,7 +31,7 @@ const OpportunitiesPage = ({ navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>123 Sesame Street</Text>
+        <Text style={styles.headerText}>123 Main Street</Text>
       </View>
 
       {/* Find Opportunities Section */}
