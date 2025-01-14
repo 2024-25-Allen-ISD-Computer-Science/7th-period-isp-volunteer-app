@@ -55,7 +55,7 @@ const OpportunitiesPage = ({ navigation }) => {
         <MaterialIcons name="search" size={24} color="#999" />
       </View>
 
-      {/* Cards Section */}
+      {/* Display each opportunity */}
       <ScrollView contentContainerStyle={styles.content}>
         {opportunities.map((opportunity, index) => (
           <View key={index} style={styles.card}>
