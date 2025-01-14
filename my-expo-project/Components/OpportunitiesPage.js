@@ -1,32 +1,61 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-
-const opportunities = [
-  {
-    image: require('../public/comingsoon.png'),
-    title: "Dog Park Helpout!",
-    description: "Join us for a dog park volunteer day, where we'll pick up trash, maintain, and beautify the park for our furry friends and their owners.",
-    timeCommitment: "2-4 hrs",
-    isPopular: false,
-  },
-  {
-    image: require('../public/comingsoon.png'),
-    title: "Wildlife Conservation",
-    description: "Spend a day with a supporting local wildlife conservation agency, helping remove invasive plants.",
-    timeCommitment: "3-5 hrs",
-    isPopular: false,
-  },
-  {
-    image: require('../public/comingsoon.png'),
-    title: "Allen ISD FB Concessions",
-    description: "Visit the Allen ISD stadium to help serve food to people attending home & away football games!",
-    timeCommitment: "2-4 hrs",
-    isPopular: true,
-  },
-];
+import { firestore } from './firebaseConfig';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 
 const OpportunitiesPage = ({ navigation }) => {
+  const [opportunities, setOpportunities] = useState([]);
+
+  // Fetch opportunities from Firestore
+  useEffect(() => {
+    const fetchOpportunities = async () => {
+      try {
+        const opportunitiesRef = collection(firestore, 'opportunities');
+        const querySnapshot = await getDocs(opportunitiesRef);
+
+        const fetchedOpportunities = [];
+        querySnapshot.forEach((doc) => {
+          fetchedOpportunities.push({ id: doc.id, ...doc.data() });
+        });
+
+        setOpportunities(fetchedOpportunities);
+      } catch (error) {
+        console.error('Error fetching opportunities:', error);
+      }
+    };
+
+    fetchOpportunities();
+  }, []);
+
+  // Handle joining an opportunity
+  const handleJoinOpportunity = async (opportunityId, currentSignUps, maxSignUps) => {
+    if (currentSignUps >= maxSignUps) {
+      Alert.alert('Error', 'This opportunity is full.');
+      return;
+    }
+
+    try {
+      const opportunityRef = doc(firestore, 'opportunities', opportunityId);
+      await updateDoc(opportunityRef, {
+        currentSignUps: currentSignUps + 1,
+      });
+
+      Alert.alert('Success', 'You have joined the opportunity!');
+      // Update the state to reflect the changes
+      setOpportunities((prev) =>
+        prev.map((opp) =>
+          opp.id === opportunityId
+            ? { ...opp, currentSignUps: opp.currentSignUps + 1 }
+            : opp
+        )
+      );
+    } catch (error) {
+      console.error('Error joining opportunity:', error);
+      Alert.alert('Error', 'Failed to join the opportunity.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -47,27 +76,42 @@ const OpportunitiesPage = ({ navigation }) => {
 
       {/* Search Bar */}
       <View style={styles.searchBar}>
-        <TextInput 
-          style={styles.searchInput} 
-          placeholder="Search..." 
-          placeholderTextColor="#999" 
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          placeholderTextColor="#999"
         />
         <MaterialIcons name="search" size={24} color="#999" />
       </View>
 
       {/* Display each opportunity */}
       <ScrollView contentContainerStyle={styles.content}>
-        {opportunities.map((opportunity, index) => (
-          <View key={index} style={styles.card}>
-            <Image source={opportunity.image} style={styles.cardImage} />
+        {opportunities.map((opportunity) => (
+          <View key={opportunity.id} style={styles.card}>
+            <Image source={require('../public/comingsoon.png')} style={styles.cardImage} />
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{opportunity.title}</Text>
+              <Text style={styles.cardTitle}>{opportunity.name}</Text>
               <Text style={styles.cardDescription}>{opportunity.description}</Text>
-              <Text style={styles.cardTime}>{opportunity.timeCommitment}</Text>
-              {opportunity.isPopular && <Text style={styles.popularTag}>Popular right now!</Text>}
-              <TouchableOpacity style={styles.exploreButtonSmall}>
-                <Text style={styles.exploreButtonTextSmall}>Explore</Text>
-              </TouchableOpacity>
+              <Text style={styles.cardTime}>{opportunity.time}</Text>
+              <Text style={styles.cardCommitment}>
+                {opportunity.currentSignUps}/{opportunity.maxSignUps} Sign-Ups
+              </Text>
+              {opportunity.currentSignUps < opportunity.maxSignUps ? (
+                <TouchableOpacity
+                  style={styles.joinButton}
+                  onPress={() =>
+                    handleJoinOpportunity(
+                      opportunity.id,
+                      opportunity.currentSignUps,
+                      opportunity.maxSignUps
+                    )
+                  }
+                >
+                  <Text style={styles.joinButtonText}>Join</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.fullTag}>Full</Text>
+              )}
             </View>
           </View>
         ))}
@@ -75,18 +119,18 @@ const OpportunitiesPage = ({ navigation }) => {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-      <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
-        <MaterialIcons name="home" size={30} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <MaterialIcons name="search" size={30} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <MaterialIcons name="favorite" size={30} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-        <MaterialIcons name="person" size={30} color="white" />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -180,22 +224,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 5,
   },
-  popularTag: {
-    color: 'red',
-    fontSize: 12,
-    fontWeight: 'bold',
+  cardCommitment: {
+    color: '#FFF',
+    fontSize: 14,
   },
-  exploreButtonSmall: {
-    backgroundColor: '#1f91d6',
+  joinButton: {
+    backgroundColor: '#4CAF50',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
-    alignSelf: 'flex-start',
     marginTop: 5,
   },
-  exploreButtonTextSmall: {
+  joinButtonText: {
     color: '#FFF',
+    fontSize: 14,
+  },
+  fullTag: {
+    color: 'red',
     fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
   bottomNav: {
     flexDirection: 'row',
