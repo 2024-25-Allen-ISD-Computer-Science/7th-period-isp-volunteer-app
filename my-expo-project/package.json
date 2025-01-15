@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
+    "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-community/datetimepicker": "^8.2.0",
     "@react-native-community/masked-view": "^0.1.11",
     "@react-native-firebase/app": "^21.3.0",
@@ -29,7 +30,7 @@
     "expo-module-scripts": "^3.5.2",
     "expo-random": "~14.0.1",
     "expo-status-bar": "~1.12.1",
-    "firebase": "^11.0.1",
+    "firebase": "^11.0.2",
     "nodemailer": "^6.9.16",
     "react": "18.2.0",
     "react-dom": "18.2.0",

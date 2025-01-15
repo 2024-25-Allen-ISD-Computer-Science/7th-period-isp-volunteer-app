@@ -3,10 +3,8 @@ import { View, StyleSheet, Alert, TextInput, TouchableOpacity, Image } from 'rea
 import { Button, Text, useTheme } from 'react-native-paper';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { getAuth, signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, firestore } from './firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithCredential, GoogleAuthProvider, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, } from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,6 +16,20 @@ const AuthScreen = ({ navigation }) => {
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
   });
+
+  useEffect(() => {
+    const auth = getAuth();
+
+    // Check if user is already logged in
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Navigate to the home page if the user is already authenticated
+        navigation.navigate('StudentHomePage');
+      }
+    });
+
+    return () => unsubscribe(); // Cleanup listener on component unmount
+  }, [navigation]);
 
   useEffect(() => {
     if (response?.type === 'success') {
@@ -38,7 +50,8 @@ const AuthScreen = ({ navigation }) => {
 
   const handleSignIn = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await setPersistence(auth, browserLocalPersistence); // Set persistent login
+      await signInWithEmailAndPassword(auth, email, password); //Sign in with email and password logic
       Alert.alert('Success', 'User signed in successfully');
 
       const user = userCredential.user; // Get signed-in user
