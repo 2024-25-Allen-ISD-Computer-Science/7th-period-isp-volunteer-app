@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
 import { firestore, auth } from './firebaseConfig';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 
 const LogHoursScreen = ({ route, navigation }) => {
   const [joinedCommunities, setJoinedCommunities] = useState([]);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [hours, setHours] = useState('');
+  const [activityName, setActivityName] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [description, setDescription] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -25,37 +31,39 @@ const LogHoursScreen = ({ route, navigation }) => {
     fetchUserData();
   }, []);
 
-  const handleLogHours = async () => {
-    if (!hours || isNaN(hours) || Number(hours) <= 0) {
-      Alert.alert('Invalid input', 'Please enter a valid number of hours');
+  const handleRequestApproval = async () => {
+    if (!hours || isNaN(hours) || Number(hours) <= 0 || !activityName || !date || !time || !contactEmail || !contactName || !description) {
+      Alert.alert('Invalid input', 'Please fill in all fields with valid information.');
       return;
     }
 
     try {
-      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
-      const userDoc = await getDoc(userDocRef);
-      const userData = userDoc.data();
-      
-      const updatedCommunities = userData.joinedCommunities.map((community) => {
-        if (community.communityId === selectedCommunity.communityId) {
-          return {
-            ...community,
-            hoursLogged: (community.hoursLogged || 0) + parseFloat(hours),
-          };
-        }
-        return community;
-      });
+      const hourRequest = {
+        userId: auth.currentUser.uid,
+        communityId: selectedCommunity.communityId,
+        communityName: selectedCommunity.communityName,
+        activityName,
+        date,
+        time,
+        hours: parseFloat(hours),
+        contactEmail,
+        contactName,
+        description,
+        status: 'Pending',
+      };
 
-      await updateDoc(userDocRef, {
-        joinedCommunities: updatedCommunities,
-      });
+      await addDoc(collection(firestore, 'hourRequests'), hourRequest);
 
-      setJoinedCommunities(updatedCommunities);
-
-      Alert.alert('Success', `You have logged ${hours} hours for ${selectedCommunity.communityName}!`);
-      setHours(''); 
+      Alert.alert('Success', 'Your hour log request has been submitted for approval.');
+      setHours('');
+      setActivityName('');
+      setDate('');
+      setTime('');
+      setContactEmail('');
+      setContactName('');
+      setDescription('');
     } catch (error) {
-      Alert.alert('Error', 'Failed to log hours: ' + error.message);
+      Alert.alert('Error', 'Failed to submit hour log request: ' + error.message);
     }
   };
 
@@ -65,18 +73,16 @@ const LogHoursScreen = ({ route, navigation }) => {
         styles.communityBox,
         item.communityId === selectedCommunity?.communityId && styles.selectedBox,
       ]}
-      onPress={() => {
-        setSelectedCommunity(item);  // Set the entire community object as selected
-      }}
+      onPress={() => setSelectedCommunity(item)}
     >
-      <Text style={styles.communityTitle}>{item.communityName}</Text> 
+      <Text style={styles.communityTitle}>{item.communityName}</Text>
       <Text>Hours Logged: {item.hoursLogged || 0}</Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Log Hours</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Log Hours Request</Text>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate('StudentHomePage')}
@@ -94,8 +100,26 @@ const LogHoursScreen = ({ route, navigation }) => {
       {selectedCommunity ? (
         <>
           <Text style={styles.selectedCommunityText}>
-            Logging hours for: {selectedCommunity.communityName}
+            Requesting hours for: {selectedCommunity.communityName}
           </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Activity Name"
+            value={activityName}
+            onChangeText={setActivityName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Date (YYYY-MM-DD)"
+            value={date}
+            onChangeText={setDate}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Time (HH:MM)"
+            value={time}
+            onChangeText={setTime}
+          />
           <TextInput
             style={styles.input}
             placeholder="Enter hours"
@@ -103,20 +127,39 @@ const LogHoursScreen = ({ route, navigation }) => {
             value={hours}
             onChangeText={setHours}
           />
-          <TouchableOpacity style={styles.logButton} onPress={handleLogHours}>
-            <Text style={styles.logButtonText}>Log Hours</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Verification Email"
+            value={contactEmail}
+            onChangeText={setContactEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Verification Name"
+            value={contactName}
+            onChangeText={setContactName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Description of Activity"
+            multiline
+            value={description}
+            onChangeText={setDescription}
+          />
+          <TouchableOpacity style={styles.logButton} onPress={handleRequestApproval}>
+            <Text style={styles.logButtonText}>Request Approval</Text>
           </TouchableOpacity>
         </>
       ) : (
         <Text style={styles.selectCommunityText}>Select a community.</Text>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     backgroundColor: '#f5f5f5',
   },
