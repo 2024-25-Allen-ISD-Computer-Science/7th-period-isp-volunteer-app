@@ -1,30 +1,46 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, TextInput, TouchableOpacity, Image } from 'react-native';
-import { Button, Text, useTheme } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { getAuth, signInWithCredential, GoogleAuthProvider, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged, } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { getAuth, signInWithCredential, GoogleAuthProvider, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, firestore } from './firebaseConfig'; // Make sure these are correctly imported
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AuthScreen = ({ navigation }) => {
-  const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
   // Google Auth Request setup
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
+    clientId: "YOUR_GOOGLE_CLIENT_ID",
   });
 
   useEffect(() => {
     const auth = getAuth();
 
     // Check if user is already logged in
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Navigate to the home page if the user is already authenticated
-        navigation.navigate('StudentHomePage');
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const accountType = userData.accountType;
+
+          if (accountType === 'teacher') {
+            navigation.navigate('TeacherHomePage');
+          } else if (accountType === 'student') {
+            navigation.navigate('StudentHomePage');
+          } else {
+            Alert.alert('Error', 'Invalid account type');
+          }
+        } else {
+          Alert.alert('Error', 'User data not found!');
+        }
       }
     });
 
@@ -34,14 +50,30 @@ const AuthScreen = ({ navigation }) => {
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;
-      console.log("Google authentication successful:", authentication);
-
-      // Firebase authentication using Google credentials
-      const auth = getAuth(); // Get Firebase auth instance
+      const auth = getAuth();
       const credential = GoogleAuthProvider.credential(authentication.idToken, authentication.accessToken);
-      
+
       signInWithCredential(auth, credential)
-        .then(() => navigation.navigate('StudentHomePage'))
+        .then(async () => {
+          const user = auth.currentUser;
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const accountType = userData.accountType;
+
+            if (accountType === 'teacher') {
+              navigation.navigate('TeacherHomePage');
+            } else if (accountType === 'student') {
+              navigation.navigate('StudentHomePage');
+            } else {
+              Alert.alert('Error', 'Invalid account type');
+            }
+          } else {
+            Alert.alert('Error', 'User data not found!');
+          }
+        })
         .catch((error) => Alert.alert("Authentication Error", "Failed to sign in with Google."));
     }
   }, [response]);
@@ -51,10 +83,8 @@ const AuthScreen = ({ navigation }) => {
   const handleSignIn = async () => {
     try {
       await setPersistence(auth, browserLocalPersistence); // Set persistent login
-      await signInWithEmailAndPassword(auth, email, password); //Sign in with email and password logic
-      Alert.alert('Success', 'User signed in successfully');
-
-      const user = userCredential.user; // Get signed-in user
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
       const userDocRef = doc(firestore, 'users', user.uid);
       const docSnap = await getDoc(userDocRef);
 
@@ -63,9 +93,9 @@ const AuthScreen = ({ navigation }) => {
         const accountType = userData.accountType;
 
         if (accountType === 'teacher') {
-          navigation.navigate('TeacherHomePage'); // Navigate to teacher's home page
+          navigation.navigate('TeacherHomePage');
         } else if (accountType === 'student') {
-          navigation.navigate('StudentHomePage'); // Navigate to student's home page
+          navigation.navigate('StudentHomePage');
         } else {
           Alert.alert('Error', 'Invalid account type');
         }
@@ -79,7 +109,6 @@ const AuthScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Illustration Section */}
       <View style={styles.illustrationContainer}>
         <Image 
           source={require('../public/logo.png')}
@@ -88,11 +117,9 @@ const AuthScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Login Form Section */}
       <View style={styles.formContainer}>
         <Text style={styles.title}>Email/Login</Text>
         
-        {/* Email Input */}
         <TextInput
           placeholder="user@gmail.com"
           placeholderTextColor="#888"
@@ -102,7 +129,6 @@ const AuthScreen = ({ navigation }) => {
           onChangeText={setEmail}
         />
 
-        {/* Password Input */}
         <TextInput
           placeholder="********"
           placeholderTextColor="#888"
@@ -112,30 +138,26 @@ const AuthScreen = ({ navigation }) => {
           onChangeText={setPassword}
         />
 
-        {/* Login Button */}
         <TouchableOpacity 
             style={styles.loginButton} 
             onPress={handleSignIn}
           >
             <Text style={styles.loginButtonText}>Log In</Text>
           </TouchableOpacity>
-        {/* Forgot Password */}
+
         <TouchableOpacity>
           <Text style={styles.linkText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        {/* Sign Up Link */}
         <TouchableOpacity onPress={() => navigation.navigate('EmailSignUp')}>
           <Text style={styles.linkText}>Don't Have an Account?</Text>
         </TouchableOpacity>
 
-        {/* Google Sign-In Button */}
         <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
           <Text style={styles.googleButtonText}>Sign in with Google</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Footer Section */}
       <Text style={styles.footerText}>www.HelpHive.com (coming soon)</Text>
     </View>
   );
@@ -144,7 +166,7 @@ const AuthScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C1C1C', // Dark background
+    backgroundColor: '#1C1C1C',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 20,
@@ -189,7 +211,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
   },
-  
   loginButtonText: {
     color: '#000',
     fontWeight: 'bold',
@@ -197,7 +218,7 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     width: '100%',
-    backgroundColor: '#1f91d6', 
+    backgroundColor: '#1f91d6',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
