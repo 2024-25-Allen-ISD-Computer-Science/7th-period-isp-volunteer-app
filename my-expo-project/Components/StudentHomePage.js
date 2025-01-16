@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Touchable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
@@ -8,6 +8,7 @@ import { getAuth, signOut } from "firebase/auth";
 
 const HomePage = ({ navigation }) => {
   const [userName, setUserName] = useState('');
+  const [hoveredButton, setHoveredButton] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,43 +55,65 @@ const HomePage = ({ navigation }) => {
       </TouchableOpacity>
       <Text style={styles.title}>Welcome, {userName}!</Text>
       <Text style={styles.body}>How do you want to help your community today?</Text>
-
-      <TouchableOpacity 
-        style={styles.box} 
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'profile' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('profile')}
+        onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('ProfileScreen')}
       >
         <Text style={styles.boxText}>View Profile</Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
-        style={styles.box}
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'opportunities' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('opportunities')}
+        onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('Opportunities')}
       >
         <Text style={styles.boxText}>Find Opportunities</Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
-        style={styles.box}
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'logHours' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('logHours')}
+        onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('LogHours')}
       >
         <Text style={styles.boxText}>Log Your Hours</Text>
-      </TouchableOpacity>
+      </Pressable>
 
-      <TouchableOpacity
-        style={styles.box}
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'communities' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('communities')}
+        onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('Communities')}
       >
-        <Text style={styles.boxText}>Communities...</Text>
-      </TouchableOpacity>
+        <Text style={styles.boxText}>Communities</Text>
+      </Pressable>
 
-      <TouchableOpacity
-        style={styles.box}
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'progress' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('progress')}
+        onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('Progress')}
       >
         <Text style={styles.boxText}>ProgressBar</Text>
-      </TouchableOpacity>
-
-      <StatusBar style="auto" />
+      </Pressable>
     </View>
   );
 };
@@ -98,47 +121,62 @@ const HomePage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#443939',
+    backgroundColor: '#1C1C1C',
+    padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
   },
   title: {
-    color: '#fff',
-    fontSize: 32,
-    marginBottom: 20,
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   body: {
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 20,
+    color: '#CCCCCC',
+    fontSize: 18,
+    marginBottom: 30,
+    textAlign: 'center',
+    lineHeight: 24,
   },
   box: {
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    padding: 20,
-    marginBottom: 20,
-    width: '100%',
+    backgroundColor: '#2E2E2E',
+    borderRadius: 10,
+    paddingVertical: 15,
+    marginBottom: 15,
+    width: '90%',
     alignItems: 'center',
+    justifyContent: 'center',
+    transitionProperty: 'background-color',
+    transitionDuration: '200ms',
+  },
+  hoveredBox: {
+    backgroundColor: '#1f91d6',
   },
   boxText: {
-    color: '#443939',
+    color: '#FFFFFF',
     fontSize: 18,
+    fontWeight: '600',
   },
   signOutButton: {
     position: 'absolute',
-    top: 40,               
-    right: 20,            
-    backgroundColor: '#ff4c4c',  
-    paddingVertical: 10,  
-    paddingHorizontal: 20, 
-    borderRadius: 5,      
-    alignItems: 'center', 
-    justifyContent: 'center',
+    top: 50,
+    right: 20,
+    backgroundColor: '#E63946',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   signOutText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
   },
 });
 

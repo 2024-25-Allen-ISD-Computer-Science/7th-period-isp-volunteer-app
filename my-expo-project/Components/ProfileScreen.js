@@ -15,6 +15,7 @@ const ProfileScreen = ({ navigation }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [silentMode, setSilentMode] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [profilePictureUri, setProfilePictureUri] = useState('');
 
   useEffect(() => {
     // Fetch user data from Firestore
@@ -43,18 +44,32 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   const pickImage = async () => {
-    const pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-    if (!pickerResult.canceled) {
-      const uri = pickerResult.assets[0].uri;
-      console.log('Picked image URI:', uri); // Debugging
-      setProfilePicture(uri); // Update state
-      uploadProfilePicture(uri); // Explicitly call uploadProfilePicture
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission required', 'Please allow access to the media library.');
+        return;
+      }
+  
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaType,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+  
+      if (!result.canceled) {
+        console.log('Picked image URI:', result.assets[0].uri);
+        setProfilePicture(result.assets[0].uri); // Save the URI
+      }
+    } catch (error) {
+      Alert.alert('Error', `Failed to pick image: ${error.message}`);
     }
+  };
+
+  const convertUriToBlob = async (uri) => {
+    const response = await fetch(uri);
+    return await response.blob();
   };
 
   const handleFieldUpdate = async (field, value) => {
@@ -67,16 +82,21 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  const uploadProfilePicture = async (uri) => {
-    console.log('uploadProfilePicture called'); // Debug
-
-    if (!profilePicture) {
-      Alert.alert('No image selected', 'Please select an image first.');
-      return;
-    }
+  const updateFirestoreProfilePicture = async (url) => {
     try {
-      const response = await fetch(profilePicture);
-      const blob = await response.blob();
+      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      await updateDoc(userDocRef, { profilePicture: url });
+      console.log('Firestore updated successfully');
+    } catch (error) {
+      console.error('Firestore update error:', error.message);
+    }
+  };
+
+  const uploadProfilePicture = async (uri) => {
+    try {
+      console.log('Uploading image URI:', uri);
+  
+      const blob = await convertUriToBlob(uri);
       const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
       const uploadTask = uploadBytesResumable(storageRef, blob);
   
@@ -89,13 +109,12 @@ const ProfileScreen = ({ navigation }) => {
         },
         async () => {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.log('Download URL:', downloadURL); // Debug: Log the URL
-  
-          const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
-          await updateDoc(userDocRef, { profilePicture: downloadURL }); // Save to Firestore
-          console.log('Profile picture updated in Firestore.'); // Debug: Log success
-  
-          setProfilePicture(downloadURL); // Update local state
+          console.log('Download URL:', downloadURL);
+      
+          // Update Firestore with the new profile picture URL
+          await updateFirestoreProfilePicture(downloadURL);
+      
+          setProfilePicture(downloadURL); // Update local state with the new URL
           Alert.alert('Success', 'Profile picture updated!');
         }
       );
@@ -104,6 +123,37 @@ const ProfileScreen = ({ navigation }) => {
       Alert.alert('Error', `Image upload failed: ${error.message}`);
     }
   };
+
+  const handleImageUpload = async () => {
+    if (profilePictureUri) {
+      await uploadProfilePicture(profilePictureUri);
+    } else {
+      Alert.alert('No image selected', 'Please select an image to upload.');
+    }
+    try {
+      const blob = await convertUriToBlob(profilePictureUri);
+      const storageRef = ref(storage, `profile_pictures/${auth.currentUser.uid}`);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+  
+      uploadTask.on(
+        'state_changed',
+        null,
+        (error) => {
+          console.error('Upload failed:', error.message);
+          Alert.alert('Upload failed', error.message);
+        },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('Uploaded and retrieved download URL:', downloadURL);
+        }
+      );
+    } catch (error) {
+      console.error('Image upload error:', error.message);
+      Alert.alert('Error', `Image upload failed: ${error.message}`);
+    }
+  };
+
+  
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -136,6 +186,12 @@ const ProfileScreen = ({ navigation }) => {
           ) : (
             <MaterialIcons name="account-circle" size={100} color="#CCC" />
           )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={handleImageUpload}
+        >
+          <Text style={styles.uploadButtonText}>Upload Profile Picture</Text>
         </TouchableOpacity>
         <Text style={styles.profileName}>
           {firstName} {lastName}

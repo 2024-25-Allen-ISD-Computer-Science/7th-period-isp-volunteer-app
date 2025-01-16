@@ -1,5 +1,6 @@
 {
   "expo": {
+    
     "name": "helphive",
     "slug": "helphive",
     "version": "1.0.0",
@@ -14,6 +15,12 @@
 
       "googleClientID": "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
       "redirectUri": "https://auth.expo.dev/@wozohaib/helphive/redirect"
+    },
+    "android": {
+      "newArchEnabled": true
+    },
+    "ios": {
+      "newArchEnabled": true
     }
   }
 }
