@@ -71,9 +71,9 @@ const TeacherHomePage = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.box}
-        onPress={() => navigation.navigate('StudentProgress')}
+        onPress={() => navigation.navigate('TeacherManagePage')}
       >
-        <Text style={styles.boxText}>View Student Progress</Text>
+        <Text style={styles.boxText}>Manage Students</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
