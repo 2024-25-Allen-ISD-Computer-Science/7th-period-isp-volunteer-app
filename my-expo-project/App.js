@@ -18,6 +18,7 @@ const Stack = createNativeStackNavigator();
 import ManageCommunities from './Components/Teachers/ManageCommunities';
 import CreateOpportunities from './Components/Teachers/CreateOpportunities';
 import { ScreenStackHeaderLeftView } from 'react-native-screens';
+import TeacherManagePage from './Components/Teachers/TeacherManagePage';
 
 
 const theme = {
@@ -46,6 +47,7 @@ const App = () => {
         <Stack.Screen options={{ HeaderShown: false }} name="Progress" component={CommunityProgressScreen} />
         <Stack.Screen options={{ HeaderShown: false }} name="ManageCommunities" component={ManageCommunities} />
         <Stack.Screen options={{ HeaderShown: false }} name="CreateOpportunities" component={CreateOpportunities} />
+        <Stack.Screen options={{ HeaderShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>
