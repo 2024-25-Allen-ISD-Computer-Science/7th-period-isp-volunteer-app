@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
 import { firestore, auth } from './firebaseConfig';
-import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 
 const LogHoursScreen = ({ route, navigation }) => {
   const [joinedCommunities, setJoinedCommunities] = useState([]);
@@ -13,49 +13,77 @@ const LogHoursScreen = ({ route, navigation }) => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [description, setDescription] = useState('');
+  const [opportunities, setOpportunities] = useState([]);
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          setJoinedCommunities(userDoc.data().joinedCommunities || []);
+          const userData = userDoc.data();
+          setJoinedCommunities(userData.joinedCommunities || []);
+          
+          // Fetch opportunities for the selected community
+          if (userData.joinedCommunities?.length) {
+            const opportunitiesQuery = query(
+              collection(firestore, 'opportunities'),
+              where('communityId', 'in', userData.joinedCommunities.map((community) => community.communityId))
+            );
+            const opportunitySnapshot = await getDocs(opportunitiesQuery);
+            const opportunitiesList = opportunitySnapshot.docs.map((doc) => doc.data());
+            setOpportunities(opportunitiesList);
+          }
         } else {
           Alert.alert('Error', 'No communities found.');
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data: ' + error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
   }, []);
 
-  const handleRequestApproval = async () => {
-    if (!hours || isNaN(hours) || Number(hours) <= 0 || !activityName || !date || !time || !contactEmail || !contactName || !description) {
+  const handleCommunitySelect = (community) => {
+    if (selectedCommunity?.communityId === community.communityId) {
+      setSelectedCommunity(null);
+    } else {
+      setSelectedCommunity(community);
+    }
+  };
+
+  const handleOpportunitySelect = (opportunity) => {
+    if (selectedOpportunity?.name === opportunity.name) {
+      setSelectedOpportunity(null);
+    } else {
+      setSelectedOpportunity(opportunity);
+    }
+  };
+
+  const handleSubmitOpportunity = async () => {
+    if (!activityName || !date || !time || !contactEmail || !contactName || !description) {
       Alert.alert('Invalid input', 'Please fill in all fields with valid information.');
       return;
     }
 
     try {
-      const hourRequest = {
-        userId: auth.currentUser.uid,
+      const opportunityData = {
         communityId: selectedCommunity.communityId,
-        communityName: selectedCommunity.communityName,
-        activityName,
+        createdBy: auth.currentUser.uid,
         date,
-        time,
-        hours: parseFloat(hours),
-        contactEmail,
-        contactName,
         description,
-        status: 'Pending',
+        hourValue: parseFloat(hours),
+        name: activityName,
+        time,
       };
 
-      await addDoc(collection(firestore, 'hourRequests'), hourRequest);
+      await addDoc(collection(firestore, 'opportunities'), opportunityData);
 
-      Alert.alert('Success', 'Your hour log request has been submitted for approval.');
-      setHours('');
+      Alert.alert('Success', 'Opportunity submitted successfully.');
       setActivityName('');
       setDate('');
       setTime('');
@@ -63,7 +91,32 @@ const LogHoursScreen = ({ route, navigation }) => {
       setContactName('');
       setDescription('');
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit hour log request: ' + error.message);
+      Alert.alert('Error', 'Failed to submit opportunity: ' + error.message);
+    }
+  };
+
+  const handleLogHours = async () => {
+    if (!hours || isNaN(hours) || Number(hours) <= 0) {
+      Alert.alert('Invalid input', 'Please enter a valid number of hours.');
+      return;
+    }
+
+    try {
+      const logData = {
+        opportunityId: selectedOpportunity.name,  // use name as ID or set your own unique ID
+        userId: auth.currentUser.uid,
+        hours: parseFloat(hours),
+        date: new Date().toISOString(),
+        status: 'Pending',
+      };
+
+      await addDoc(collection(firestore, 'hourLogs'), logData);
+
+      Alert.alert('Success', 'Your hour log has been submitted for approval.');
+      setHours('');
+      setSelectedOpportunity(null);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to log hours: ' + error.message);
     }
   };
 
@@ -73,16 +126,40 @@ const LogHoursScreen = ({ route, navigation }) => {
         styles.communityBox,
         item.communityId === selectedCommunity?.communityId && styles.selectedBox,
       ]}
-      onPress={() => setSelectedCommunity(item)}
+      onPress={() => handleCommunitySelect(item)}
     >
       <Text style={styles.communityTitle}>{item.communityName}</Text>
       <Text>Hours Logged: {item.hoursLogged || 0}</Text>
     </TouchableOpacity>
   );
 
+  const renderOpportunity = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.communityBox,
+        item.name === selectedOpportunity?.name && styles.selectedBox,
+      ]}
+      onPress={() => handleOpportunitySelect(item)}
+    >
+      <Text style={styles.communityTitle}>{item.name}</Text>
+      <Text>Date: {item.date}</Text>
+      <Text>Time: {item.time}</Text>
+      <Text>Description: {item.description}</Text>
+      <Text>Hour Value: {item.hourValue}</Text>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading data...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Log Hours Request</Text>
+      <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.navigate('StudentHomePage')}
@@ -102,53 +179,72 @@ const LogHoursScreen = ({ route, navigation }) => {
           <Text style={styles.selectedCommunityText}>
             Requesting hours for: {selectedCommunity.communityName}
           </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Activity Name"
-            value={activityName}
-            onChangeText={setActivityName}
+
+          {/* Opportunities Section */}
+          <FlatList
+            data={opportunities}
+            keyExtractor={(item) => item.name}
+            renderItem={renderOpportunity}
+            ListEmptyComponent={<Text>No opportunities found for this community.</Text>}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Date (YYYY-MM-DD)"
-            value={date}
-            onChangeText={setDate}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Time (HH:MM)"
-            value={time}
-            onChangeText={setTime}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter hours"
-            keyboardType="numeric"
-            value={hours}
-            onChangeText={setHours}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Contact Verification Email"
-            value={contactEmail}
-            onChangeText={setContactEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Contact Verification Name"
-            value={contactName}
-            onChangeText={setContactName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Description of Activity"
-            multiline
-            value={description}
-            onChangeText={setDescription}
-          />
-          <TouchableOpacity style={styles.logButton} onPress={handleRequestApproval}>
-            <Text style={styles.logButtonText}>Request Approval</Text>
-          </TouchableOpacity>
+
+          {selectedOpportunity ? (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter hours"
+                keyboardType="numeric"
+                value={hours}
+                onChangeText={setHours}
+              />
+              <TouchableOpacity style={styles.logButton} onPress={handleLogHours}>
+                <Text style={styles.logButtonText}>Log Hours</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Activity Name"
+                value={activityName}
+                onChangeText={setActivityName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Date (YYYY-MM-DD)"
+                value={date}
+                onChangeText={setDate}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Time (HH:MM)"
+                value={time}
+                onChangeText={setTime}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Contact Verification Email"
+                value={contactEmail}
+                onChangeText={setContactEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Contact Verification Name"
+                value={contactName}
+                onChangeText={setContactName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Description of Activity"
+                multiline
+                value={description}
+                onChangeText={setDescription}
+              />
+              <TouchableOpacity style={styles.logButton} onPress={handleSubmitOpportunity}>
+                <Text style={styles.logButtonText}>Submit Opportunity</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </>
       ) : (
         <Text style={styles.selectCommunityText}>Select a community.</Text>
