@@ -4,6 +4,7 @@
     "name": "helphive",
     "slug": "helphive",
     "version": "1.0.0",
+    "scheme": "helphive",
     "extra": {
       "FIREBASE_API_KEY": "your-api-key",
       "FIREBASE_AUTH_DOMAIN": "helphive-a462e.firebaseapp.com",

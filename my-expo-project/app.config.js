@@ -3,6 +3,7 @@ export default {
     expo: {
       name: 'HelpHive',
       slug: 'impact-starts-here',
+      scheme: "helphive",
       extra: {
         firebaseApiKey: process.env.FIREBASE_API_KEY,
         firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN,
