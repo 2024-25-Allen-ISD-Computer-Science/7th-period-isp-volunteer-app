@@ -3,25 +3,22 @@ import { View, StyleSheet, Alert, TextInput, TouchableOpacity, Image } from 'rea
 import { Text } from 'react-native-paper';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { getAuth, signInWithCredential, GoogleAuthProvider, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithCredential, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, firestore } from './firebaseConfig'; // Make sure these are correctly imported
+import { auth, firestore } from './firebaseConfig';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // Google Auth Request setup
   const [request, response, promptAsync] = Google.useAuthRequest({
     clientId: "YOUR_GOOGLE_CLIENT_ID",
   });
 
   useEffect(() => {
-    const auth = getAuth();
-
-    // Check if user is already logged in
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userDocRef = doc(firestore, 'users', user.uid);
@@ -31,58 +28,34 @@ const AuthScreen = ({ navigation }) => {
           const userData = docSnap.data();
           const accountType = userData.accountType;
 
-          if (accountType === 'teacher') {
-            navigation.navigate('TeacherHomePage');
-          } else if (accountType === 'student') {
-            navigation.navigate('StudentHomePage');
-          } else {
-            Alert.alert('Error', 'Invalid account type');
-          }
+          navigation.navigate(accountType === 'teacher' ? 'TeacherHomePage' : 'StudentHomePage');
         } else {
           Alert.alert('Error', 'User data not found!');
         }
       }
     });
 
-    return () => unsubscribe(); // Cleanup listener on component unmount
+    return () => unsubscribe(); // Cleanup listener
   }, [navigation]);
 
   useEffect(() => {
     if (response?.type === 'success') {
-      const { authentication } = response;
-      const auth = getAuth();
-      const credential = GoogleAuthProvider.credential(authentication.idToken, authentication.accessToken);
+      const { idToken, accessToken } = response.authentication;
+      const credential = GoogleAuthProvider.credential(idToken, accessToken);
 
       signInWithCredential(auth, credential)
-        .then(async () => {
-          const user = auth.currentUser;
-          const userDocRef = doc(firestore, 'users', user.uid);
-          const docSnap = await getDoc(userDocRef);
-
-          if (docSnap.exists()) {
-            const userData = docSnap.data();
-            const accountType = userData.accountType;
-
-            if (accountType === 'teacher') {
-              navigation.navigate('TeacherHomePage');
-            } else if (accountType === 'student') {
-              navigation.navigate('StudentHomePage');
-            } else {
-              Alert.alert('Error', 'Invalid account type');
-            }
-          } else {
-            Alert.alert('Error', 'User data not found!');
-          }
+        .then(() => {
+          console.log('Google Sign-In successful');
+          navigation.navigate('StudentHomePage');
         })
-        .catch((error) => Alert.alert("Authentication Error", "Failed to sign in with Google."));
+        .catch((error) => Alert.alert('Authentication Error', error.message));
     }
   }, [response]);
 
-  const handleGoogleSignIn = () => promptAsync(); // Initiates Google sign-in
+  const handleGoogleSignIn = () => promptAsync();
 
   const handleSignIn = async () => {
     try {
-      await setPersistence(auth, browserLocalPersistence); // Set persistent login
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       const userDocRef = doc(firestore, 'users', user.uid);
@@ -92,13 +65,7 @@ const AuthScreen = ({ navigation }) => {
         const userData = docSnap.data();
         const accountType = userData.accountType;
 
-        if (accountType === 'teacher') {
-          navigation.navigate('TeacherHomePage');
-        } else if (accountType === 'student') {
-          navigation.navigate('StudentHomePage');
-        } else {
-          Alert.alert('Error', 'Invalid account type');
-        }
+        navigation.navigate(accountType === 'teacher' ? 'TeacherHomePage' : 'StudentHomePage');
       } else {
         Alert.alert('Error', 'User data not found!');
       }
