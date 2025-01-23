@@ -1,47 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { firestore } from './firebaseConfig';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { firestore, auth } from './firebaseConfig';
+import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 
 const OpportunitiesPage = ({ navigation }) => {
   const [opportunities, setOpportunities] = useState([]);
+  const [userData, setUserData] = useState({});
 
-  // Fetch opportunities from Firestore
+  // Fetch opportunities and user data from Firestore
   useEffect(() => {
-    const fetchOpportunities = async () => {
+    const fetchData = async () => {
       try {
         const opportunitiesRef = collection(firestore, 'opportunities');
         const querySnapshot = await getDocs(opportunitiesRef);
-
+        
         const fetchedOpportunities = [];
         querySnapshot.forEach((doc) => {
           fetchedOpportunities.push({ id: doc.id, ...doc.data() });
         });
-
         setOpportunities(fetchedOpportunities);
+
+        // Fetch user data
+        const userId = auth.currentUser.uid;
+        const userRef = doc(firestore, 'users', userId);
+        const userSnapshot = await getDoc(userRef);
+        if (userSnapshot.exists()) {
+          setUserData(userSnapshot.data());
+        }
       } catch (error) {
-        console.error('Error fetching opportunities:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchOpportunities();
+    fetchData();
   }, []);
 
   // Handle joining an opportunity
   const handleJoinOpportunity = async (opportunityId, currentSignUps, maxSignUps) => {
-    if (currentSignUps >= maxSignUps) {
-      Alert.alert('Error', 'This opportunity is full.');
-      return;
-    }
+    const userId = auth.currentUser.uid;
+    const userRef = doc(firestore, 'users', userId);
 
     try {
+      // Fetch the user's document
+      const userSnapshot = await getDoc(userRef);
+      const userData = userSnapshot.exists() ? userSnapshot.data() : {};
+
+      // Check if the joinedOpportunities field exists, and initialize it if not
+      const joinedOpportunities = userData?.joinedOpportunities || [];
+
+      // Check if the user has already joined this opportunity
+      if (joinedOpportunities.includes(opportunityId)) {
+        Alert.alert('Error', 'You have already joined this opportunity.');
+        return;
+      }
+
+      if (currentSignUps >= maxSignUps) {
+        Alert.alert('Error', 'This opportunity is full.');
+        return;
+      }
+
+      // Update the opportunity's sign-up count
       const opportunityRef = doc(firestore, 'opportunities', opportunityId);
       await updateDoc(opportunityRef, {
         currentSignUps: currentSignUps + 1,
       });
 
+      // Update the user's joinedOpportunities list
+      await updateDoc(userRef, {
+        joinedOpportunities: [...joinedOpportunities, opportunityId],
+      });
+
       Alert.alert('Success', 'You have joined the opportunity!');
+
       // Update the state to reflect the changes
       setOpportunities((prev) =>
         prev.map((opp) =>
@@ -96,7 +127,8 @@ const OpportunitiesPage = ({ navigation }) => {
               <Text style={styles.cardCommitment}>
                 {opportunity.currentSignUps}/{opportunity.maxSignUps} Sign-Ups
               </Text>
-              {opportunity.currentSignUps < opportunity.maxSignUps ? (
+              {opportunity.currentSignUps < opportunity.maxSignUps &&
+              !userData.joinedOpportunities?.includes(opportunity.id) ? (
                 <TouchableOpacity
                   style={styles.joinButton}
                   onPress={() =>
@@ -110,7 +142,11 @@ const OpportunitiesPage = ({ navigation }) => {
                   <Text style={styles.joinButtonText}>Join</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.fullTag}>Full</Text>
+                <Text style={styles.fullTag}>
+                  {opportunity.currentSignUps >= opportunity.maxSignUps
+                    ? 'Full'
+                    : 'Already Joined'}
+                </Text>
               )}
             </View>
           </View>
