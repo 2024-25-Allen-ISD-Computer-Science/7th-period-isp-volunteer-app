@@ -4,9 +4,9 @@
     "name": "helphive",
     "slug": "helphive",
     "version": "1.0.0",
-    "scheme": "helphive",
+    "scheme": "com.helphive",
     "extra": {
-      "FIREBASE_API_KEY": "your-api-key",
+      "FIREBASE_API_KEY": "AIzaSyBgjCXVcfUcInJ3u3jUYrpBR_rGd3uVi-c",
       "FIREBASE_AUTH_DOMAIN": "helphive-a462e.firebaseapp.com",
       "FIREBASE_PROJECT_ID": "helphive-a462e",
       "FIREBASE_STORAGE_BUCKET": "helphive-a462e.appspot.com",
@@ -15,7 +15,7 @@
       "FIREBASE_MEASUREMENT_ID": "G-7484DRXG0Y",
 
       "googleClientID": "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
-      "redirectUri": "https://auth.expo.dev/@wozohaib/helphive/redirect"
+      "redirectUri": "https://auth.expo.io/@anonymous/helphive"
     },
     "android": {
       "newArchEnabled": true
