@@ -44,9 +44,6 @@ const VerifyHoursPage = ({ route, navigation }) => {
         requestedVerification: updatedHours,
       });
 
-      // You can add a verification field here if you'd like to track the status of the hour
-      // E.g., verify the hour in a subcollection or update status on the hour object itself.
-
       Alert.alert('Success', 'Hour verified successfully.');
       setRequestedHours(updatedHours);  // Update the local state
     } catch (error) {
@@ -67,8 +64,6 @@ const VerifyHoursPage = ({ route, navigation }) => {
       await updateDoc(studentRef, {
         requestedVerification: updatedHours,
       });
-
-      // You can also log the rejected hour in a separate subcollection or mark its status.
       
       Alert.alert('Success', 'Hour rejected successfully.');
       setRequestedHours(updatedHours);  // Update the local state
