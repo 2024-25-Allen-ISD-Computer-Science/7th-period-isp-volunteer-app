@@ -58,7 +58,7 @@ const TeacherHomePage = ({ navigation }) => {
         style={[styles.box, hoveredButton === 'profile' && styles.hoveredBox]}
         onHoverIn={() => setHoveredButton('profile')}
         onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('TeacherProfile')}
+        onPress={() => navigation.navigate('ProfileScreen')}
       >
         <Text style={styles.boxText}>View Profile</Text>
       </Pressable>

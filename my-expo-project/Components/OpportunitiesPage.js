@@ -87,6 +87,52 @@ const OpportunitiesPage = ({ navigation }) => {
     }
   };
 
+  const handleCancelOpportunity = async (opportunityId, currentSignUps) => {
+    const userId = auth.currentUser.uid;
+    const userRef = doc(firestore, 'users', userId);
+    const opportunityRef = doc(firestore, 'opportunities', opportunityId);
+  
+    try {
+      // Fetch user data
+      const userSnapshot = await getDoc(userRef);
+      if (!userSnapshot.exists()) return;
+  
+      let joinedOpportunities = userSnapshot.data().joinedOpportunities || [];
+  
+      // Ensure the user has joined this opportunity
+      if (!joinedOpportunities.includes(opportunityId)) {
+        Alert.alert('Error', 'You are not part of this opportunity.');
+        return;
+      }
+  
+      // Remove the opportunity from joinedOpportunities
+      joinedOpportunities = joinedOpportunities.filter(id => id !== opportunityId);
+  
+      // Update the user's document
+      await updateDoc(userRef, { joinedOpportunities });
+  
+      // Decrease the current sign-ups count
+      await updateDoc(opportunityRef, { currentSignUps: Math.max(0, currentSignUps - 1) });
+  
+      Alert.alert('Success', 'You have left the opportunity.');
+  
+      // Update the state
+      setOpportunities(prev =>
+        prev.map(opp =>
+          opp.id === opportunityId ? { ...opp, currentSignUps: Math.max(0, opp.currentSignUps - 1) } : opp
+        )
+      );
+  
+      setUserData(prev => ({
+        ...prev,
+        joinedOpportunities
+      }));
+    } catch (error) {
+      console.error('Error canceling opportunity:', error);
+      Alert.alert('Error', 'Failed to cancel the opportunity.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -115,8 +161,8 @@ const OpportunitiesPage = ({ navigation }) => {
         <MaterialIcons name="search" size={24} color="#999" />
       </View>
 
-      {/* Display each opportunity */}
-      <ScrollView contentContainerStyle={styles.content}>
+ {/* Display each opportunity */}
+ <ScrollView contentContainerStyle={styles.content}>
         {opportunities.map((opportunity) => (
           <View key={opportunity.id} style={styles.card}>
             <Image source={require('../public/comingsoon.png')} style={styles.cardImage} />
@@ -127,8 +173,16 @@ const OpportunitiesPage = ({ navigation }) => {
               <Text style={styles.cardCommitment}>
                 {opportunity.currentSignUps}/{opportunity.maxSignUps} Sign-Ups
               </Text>
-              {opportunity.currentSignUps < opportunity.maxSignUps &&
-              !userData.joinedOpportunities?.includes(opportunity.id) ? (
+              {userData.joinedOpportunities?.includes(opportunity.id) ? (
+                <TouchableOpacity
+                  style={[styles.joinButton, { backgroundColor: 'red' }]}
+                  onPress={() =>
+                    handleCancelOpportunity(opportunity.id, opportunity.currentSignUps)
+                  }
+                >
+                  <Text style={styles.joinButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              ) : opportunity.currentSignUps < opportunity.maxSignUps ? (
                 <TouchableOpacity
                   style={styles.joinButton}
                   onPress={() =>
@@ -142,11 +196,7 @@ const OpportunitiesPage = ({ navigation }) => {
                   <Text style={styles.joinButtonText}>Join</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.fullTag}>
-                  {opportunity.currentSignUps >= opportunity.maxSignUps
-                    ? 'Full'
-                    : 'Already Joined'}
-                </Text>
+                <Text style={styles.fullTag}>Full</Text>
               )}
             </View>
           </View>
