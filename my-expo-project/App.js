@@ -50,6 +50,7 @@ const App = () => {
         <Stack.Screen options={{ HeaderShown: false }} name="CreateOpportunities" component={CreateOpportunities} />
         <Stack.Screen options={{ HeaderShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
         <Stack.Screen options={{ HeaderShown: false }} name="VerifyHours" component={VerifyHoursPage} />
+        
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>
