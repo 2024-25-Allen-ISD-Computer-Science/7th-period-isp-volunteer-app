@@ -107,10 +107,10 @@ const LogHoursScreen = ({ route, navigation }) => {
         userId: auth.currentUser.uid,
         hours: parseFloat(hours),
         date: new Date().toISOString(),
-        status: 'Pending',
+        status: 'Pending',  // pending approval by teacher
       };
 
-      await addDoc(collection(firestore, 'hourLogs'), logData);
+      await addDoc(collection(firestore, 'hourRequests'), logData);  // Storing the request in a separate collection
 
       Alert.alert('Success', 'Your hour log has been submitted for approval.');
       setHours('');
