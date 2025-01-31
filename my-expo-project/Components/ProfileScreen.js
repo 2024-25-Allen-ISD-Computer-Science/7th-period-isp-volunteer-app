@@ -6,6 +6,8 @@ import { firestore, storage } from './firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { auth } from './firebaseConfig';
+import { getAuth, signOut } from "firebase/auth";
+
 
 const ProfileScreen = ({ navigation }) => {
   const [profilePicture, setProfilePicture] = useState('');
@@ -108,11 +110,16 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleSignOut = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Yes', onPress: () => navigation.navigate('LoginScreen') },
-    ]);
-  };
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        // Navigate to the authentication screen after successful sign out
+        navigation.navigate('Auth');
+      })
+      .catch((error) => {
+        console.error("Sign-out error:", error);
+      });
+  }; 
 
   return (
     <ScrollView

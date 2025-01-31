@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { auth, firestore } from '../Components/firebaseConfig';
+import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
-import { getAuth, signOut } from "firebase/auth"; // Firebase Auth functions
+import { getAuth, signOut } from "firebase/auth";
 
-const TeacherHomePage = ({ navigation }) => {
+
+const StudentHomePage = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [hoveredButton, setHoveredButton] = useState(null);
 
@@ -13,7 +14,7 @@ const TeacherHomePage = ({ navigation }) => {
     const fetchUserData = async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(firestore, 'users', user.uid); // Reference to the teacher's document in Firestore
+        const userDocRef = doc(firestore, 'users', user.uid); // Reference to the user's document in Firestore
         const docSnap = await getDoc(userDocRef);
 
         if (docSnap.exists()) {
@@ -27,78 +28,91 @@ const TeacherHomePage = ({ navigation }) => {
 
     fetchUserData();
   }, []);
+  
 
-  // Logic behind sign-out button
+  //Logic behind sign out button
   const handleSignOut = () => {
     const auth = getAuth();
     signOut(auth)
       .then(() => {
-        // Navigate to the authentication screen after successful sign-out
+        // Navigate to the authentication screen after successful sign out
         navigation.navigate('Auth');
       })
       .catch((error) => {
         console.error("Sign-out error:", error);
       });
-  };
+  };  
+  
 
   return (
     <View style={styles.container}>
-      {/* Sign-Out Button */}
+      {/* Creating a red Sign Out Button in the top right corner of the page*/}
       <TouchableOpacity
         style={styles.signOutButton}
         onPress={handleSignOut}
       >
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
-
-      {/* Greeting Message */}
       <Text style={styles.title}>Welcome, {userName}!</Text>
-      <Text style={styles.body}>How would you like to manage your communities today?</Text>
-
-      {/* Teacher-specific buttons */}
+      <Text style={styles.body}>How do you want to help your community today?</Text>
       <Pressable
-        style={[styles.box, hoveredButton === 'profile' && styles.hoveredBox]}
+        style={[
+          styles.box,
+          hoveredButton === 'profile' && styles.hoveredBox,
+        ]}
         onHoverIn={() => setHoveredButton('profile')}
         onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('TeacherProfile')}
+        onPress={() => navigation.navigate('ProfileScreen')}
       >
         <Text style={styles.boxText}>View Profile</Text>
       </Pressable>
 
       <Pressable
-        style={[styles.box, hoveredButton === 'communities' && styles.hoveredBox]}
-        onHoverIn={() => setHoveredButton('communities')}
-        onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('ManageCommunities')}
-      >
-        <Text style={styles.boxText}>Manage Communities</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.box, hoveredButton === 'students' && styles.hoveredBox]}
-        onHoverIn={() => setHoveredButton('students')}
-        onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('TeacherManagePage')}
-      >
-        <Text style={styles.boxText}>Manage Students</Text>
-      </Pressable>
-
-      <Pressable
-        style={[styles.box, hoveredButton === 'opportunities' && styles.hoveredBox]}
+        style={[
+          styles.box,
+          hoveredButton === 'opportunities' && styles.hoveredBox,
+        ]}
         onHoverIn={() => setHoveredButton('opportunities')}
         onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('CreateOpportunities')}
+        onPress={() => navigation.navigate('Opportunities')}
       >
-        <Text style={styles.boxText}>Create Opportunities</Text>
+        <Text style={styles.boxText}>Find Opportunities</Text>
       </Pressable>
 
       <Pressable
-        style={[styles.box, hoveredButton === 'events' && styles.hoveredBox]}
-        onHoverIn={() => setHoveredButton('events')}
+        style={[
+          styles.box,
+          hoveredButton === 'logHours' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('logHours')}
         onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('EventManagement')}
+        onPress={() => navigation.navigate('LogHours')}
       >
-        <Text style={styles.boxText}>Manage Events</Text>
+        <Text style={styles.boxText}>Log Your Hours</Text>
+      </Pressable>
+
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'communities' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('communities')}
+        onHoverOut={() => setHoveredButton(null)}
+        onPress={() => navigation.navigate('Communities')}
+      >
+        <Text style={styles.boxText}>Communities</Text>
+      </Pressable>
+
+      <Pressable
+        style={[
+          styles.box,
+          hoveredButton === 'progress' && styles.hoveredBox,
+        ]}
+        onHoverIn={() => setHoveredButton('progress')}
+        onHoverOut={() => setHoveredButton(null)}
+        onPress={() => navigation.navigate('Progress')}
+      >
+        <Text style={styles.boxText}>ProgressBar</Text>
       </Pressable>
     </View>
   );
@@ -166,4 +180,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TeacherHomePage;
+export default StudentHomePage;

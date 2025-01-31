@@ -57,20 +57,54 @@ const CommunityScreen = ({ navigation }) => {
     }
   };
 
-  const renderCommunity = ({ item }) => (
-    <View style={styles.communityBox}>
-      <Text style={styles.communityTitle}>{item.communityName}</Text>
-      <Text style={styles.communityDescription}>{item.description}</Text>
-      <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
-      {joinedCommunities.some(c => c.communityId === item.id) ? (
-        <Text style={styles.joinedText}>Joined</Text>
-      ) : (
-        <TouchableOpacity style={styles.joinButton} onPress={() => joinCommunity(item.id, item.communityName)}>
-          <Text style={styles.joinButtonText}>Join</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+  const leaveCommunity = async (communityId) => {
+    try {
+      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+  
+      // Filter out the community the user wants to leave
+      const updatedCommunities = joinedCommunities.filter((c) => c.communityId !== communityId);
+  
+      // Update Firestore
+      await updateDoc(userDocRef, {
+        joinedCommunities: updatedCommunities,
+      });
+  
+      Alert.alert('Success', 'You have left the community.');
+  
+      // Update local state
+      setJoinedCommunities(updatedCommunities);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to leave community: ' + error.message);
+    }
+  };
+
+  const renderCommunity = ({ item }) => {
+    const isJoined = joinedCommunities.some((c) => c.communityId === item.id);
+  
+    return (
+      <View style={styles.communityBox}>
+        <Text style={styles.communityTitle}>{item.communityName}</Text>
+        <Text style={styles.communityDescription}>{item.description}</Text>
+        <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
+        
+        {isJoined ? (
+          <TouchableOpacity 
+            style={[styles.joinButton, { backgroundColor: 'red' }]} 
+            onPress={() => leaveCommunity(item.id)}
+          >
+            <Text style={styles.joinButtonText}>Leave</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity 
+            style={styles.joinButton} 
+            onPress={() => joinCommunity(item.id, item.communityName)}
+          >
+            <Text style={styles.joinButtonText}>Join</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
