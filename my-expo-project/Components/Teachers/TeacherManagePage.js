@@ -1,82 +1,130 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, arrayRemove } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 
-const TeacherManagePage = () => {
-  const [students, setStudents] = useState([]);
+const TeacherManagePage = ({ navigation }) => {
+  const [communities, setCommunities] = useState([]);
+  const [students, setStudents] = useState({});
+  const teacherId = "TAiOstXgYeR3DGsOjX4EEXAgsf43"; // Replace with actual logged-in teacher ID
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchCommunities = async () => {
       try {
-        const querySnapshot = await getDocs(collection(firestore, 'users'));
-        const studentsList = [];
+        const querySnapshot = await getDocs(collection(firestore, 'communities'));
+        const communityList = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          if (data.accountType === 'student') {
-            studentsList.push({ id: doc.id, ...data });
+          if (data.createdBy === teacherId) { 
+            communityList.push({ id: doc.id, ...data });
           }
         });
-        setStudents(studentsList);
+        setCommunities(communityList);
       } catch (error) {
-        Alert.alert('Error', 'Failed to fetch students.');
+        Alert.alert('Error', 'Failed to fetch communities.');
       }
     };
 
-    fetchStudents();
+    fetchCommunities();
   }, []);
 
-  const handleApproveHours = async (studentId, communityIndex) => {
+  const fetchStudentsInCommunity = async (communityId) => {
     try {
-      const studentDocRef = doc(firestore, 'users', studentId);
-      const studentDoc = await getDoc(studentDocRef);
-      if (studentDoc.exists()) {
-        const studentData = studentDoc.data();
-        const updatedCommunities = [...studentData.joinedCommunities];
-        updatedCommunities[communityIndex].approved = true;
+      const usersRef = collection(firestore, 'users');
+      const querySnapshot = await getDocs(usersRef);
 
-        await updateDoc(studentDocRef, { joinedCommunities: updatedCommunities });
-        Alert.alert('Success', 'Hours approved successfully!');
-      } else {
-        Alert.alert('Error', 'Student data not found!');
-      }
+      const studentList = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        if (userData.accountType === 'student' && userData.joinedCommunities) {
+          const isInCommunity = userData.joinedCommunities.some(
+            (comm) => comm.communityId === communityId
+          );
+          if (isInCommunity) {
+            studentList.push({ id: doc.id, ...userData });
+          }
+        }
+      });
+
+      return studentList;
     } catch (error) {
-      Alert.alert('Error', 'Failed to approve hours.');
+      console.error('Error fetching students:', error);
+      return [];
     }
   };
 
-  const renderStudent = ({ item }) => (
-    <View style={styles.studentContainer}>
-      <Text style={styles.studentName}>{item.firstName} {item.lastName}</Text>
-      <FlatList
-        data={item.joinedCommunities}
-        keyExtractor={(community, index) => index.toString()}
-        renderItem={({ item: community, index }) => (
-          <View style={styles.communityContainer}>
-            <Text style={styles.communityName}>{community.communityName}</Text>
-            <Text style={styles.hoursLogged}>Hours Logged: {community.hoursLogged}</Text>
-            <TouchableOpacity
-              style={styles.approveButton}
-              onPress={() => handleApproveHours(item.id, index)}
-              disabled={community.approved}
-            >
-              <Text style={styles.approveButtonText}>
-                {community.approved ? 'Approved' : 'Approve'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
-    </View>
-  );
+  useEffect(() => {
+    const loadStudents = async () => {
+      const communityStudents = {};
+      for (const community of communities) {
+        communityStudents[community.id] = await fetchStudentsInCommunity(community.id);
+      }
+      setStudents(communityStudents);
+    };
+
+    if (communities.length > 0) {
+      loadStudents();
+    }
+  }, [communities]);
+
+  const handleRemoveStudent = async (communityId, studentId) => {
+    try {
+      const userRef = doc(firestore, 'users', studentId);
+      const userDoc = await getDocs(userRef);
+      if (!userDoc.exists()) return;
+
+      const userData = userDoc.data();
+      const updatedCommunities = userData.joinedCommunities.filter(
+        (comm) => comm.communityId !== communityId
+      );
+
+      await updateDoc(userRef, {
+        joinedCommunities: updatedCommunities,
+      });
+
+      Alert.alert('Success', 'Student removed from the community.');
+      setStudents((prev) => ({
+        ...prev,
+        [communityId]: prev[communityId].filter((s) => s.id !== studentId),
+      }));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to remove student.');
+    }
+  };
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={students}
-        keyExtractor={(student) => student.id}
-        renderItem={renderStudent}
-        ListEmptyComponent={<Text style={styles.emptyMessage}>No students found.</Text>}
+        data={communities}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.communityContainer}>
+            <Text style={styles.communityName}>{item.communityName}</Text>
+            <FlatList
+              data={students[item.id] || []}
+              keyExtractor={(student) => student.id}
+              renderItem={({ item: student }) => (
+                <View style={styles.studentContainer}>
+                  <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => handleRemoveStudent(item.id, student.id)}
+                  >
+                    <Text style={styles.removeButtonText}>Remove</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.verifyButton}
+                    onPress={() => navigation.navigate('VerifyHours', { studentId: student.id })}
+                  >
+                    <Text style={styles.verifyButtonText}>Verify Hours</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              ListEmptyComponent={<Text style={styles.emptyMessage}>No students found in this community.</Text>}
+            />
+          </View>
+        )}
+        ListEmptyComponent={<Text style={styles.emptyMessage}>No communities found.</Text>}
       />
     </View>
   );
@@ -87,40 +135,52 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  studentContainer: {
-    marginBottom: 20,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-  },
-  studentName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
   communityContainer: {
+    padding: 15,
+    backgroundColor: '#ddd',
     marginBottom: 10,
+    borderRadius: 5,
   },
   communityName: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
-  hoursLogged: {
-    fontSize: 14,
-  },
-  approveButton: {
-    backgroundColor: '#4CAF50',
+  studentContainer: {
+    marginTop: 10,
     padding: 10,
+    backgroundColor: '#fff',
     borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  approveButtonText: {
+  studentName: {
+    fontSize: 16,
+  },
+  removeButton: {
+    backgroundColor: '#ff4444',
+    padding: 8,
+    borderRadius: 5,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  verifyButton: {
+    backgroundColor: '#4CAF50',
+    padding: 8,
+    borderRadius: 5,
+  },
+  verifyButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
   emptyMessage: {
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 10,
     fontSize: 16,
     color: '#888',
   },

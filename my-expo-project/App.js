@@ -19,6 +19,7 @@ import ManageCommunities from './Components/Teachers/ManageCommunities';
 import CreateOpportunities from './Components/Teachers/CreateOpportunities';
 import { ScreenStackHeaderLeftView } from 'react-native-screens';
 import TeacherManagePage from './Components/Teachers/TeacherManagePage';
+import VerifyHoursPage from './Components/Teachers/VerifyHoursPage';
 
 
 const theme = {
@@ -48,6 +49,7 @@ const App = () => {
         <Stack.Screen options={{ HeaderShown: false }} name="ManageCommunities" component={ManageCommunities} />
         <Stack.Screen options={{ HeaderShown: false }} name="CreateOpportunities" component={CreateOpportunities} />
         <Stack.Screen options={{ HeaderShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
+        <Stack.Screen options={{ HeaderShown: false }} name="VerifyHours" component={VerifyHoursPage} />
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>
