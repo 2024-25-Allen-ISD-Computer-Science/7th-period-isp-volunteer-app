@@ -94,7 +94,7 @@ const TeacherHomePage = ({ navigation }) => {
         style={[styles.box, hoveredButton === 'events' && styles.hoveredBox]}
         onHoverIn={() => setHoveredButton('events')}
         onHoverOut={() => setHoveredButton(null)}
-        onPress={() => navigation.navigate('EventManagement')}
+        onPress={() => navigation.navigate('ManageOpportunities')}
       >
         <Text style={styles.boxText}>Manage Events</Text>
       </Pressable>
