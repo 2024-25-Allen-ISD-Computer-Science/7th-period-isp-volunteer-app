@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
+import { DatePickerModal } from 'react-native-paper-dates';
+import { MaterialIcons } from '@expo/vector-icons';
 import { firestore, auth } from './firebaseConfig';
 import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { Provider as PaperProvider } from 'react-native-paper';
 
-const LogHoursScreen = ({ route, navigation }) => {
+const LogHoursScreen = ({ navigation }) => {
   const [joinedCommunities, setJoinedCommunities] = useState([]);
   const [selectedCommunity, setSelectedCommunity] = useState(null);
   const [hours, setHours] = useState('');
+  const [minutes, setMinutes] = useState('');
   const [activityName, setActivityName] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [description, setDescription] = useState('');
@@ -24,19 +28,6 @@ const LogHoursScreen = ({ route, navigation }) => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setJoinedCommunities(userData.joinedCommunities || []);
-          
-          // Fetch opportunities for the selected community
-          if (userData.joinedCommunities?.length) {
-            const opportunitiesQuery = query(
-              collection(firestore, 'opportunities'),
-              where('communityId', 'in', userData.joinedCommunities.map((community) => community.communityId))
-            );
-            const opportunitySnapshot = await getDocs(opportunitiesQuery);
-            const opportunitiesList = opportunitySnapshot.docs.map((doc) => doc.data());
-            setOpportunities(opportunitiesList);
-          }
-        } else {
-          Alert.alert('Error', 'No communities found.');
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data: ' + error.message);
@@ -44,279 +35,168 @@ const LogHoursScreen = ({ route, navigation }) => {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, []);
 
-  const handleCommunitySelect = (community) => {
-    if (selectedCommunity?.communityId === community.communityId) {
-      setSelectedCommunity(null);
-    } else {
-      setSelectedCommunity(community);
-    }
-  };
-
-  const handleOpportunitySelect = (opportunity) => {
-    if (selectedOpportunity?.name === opportunity.name) {
-      setSelectedOpportunity(null);
-    } else {
-      setSelectedOpportunity(opportunity);
-    }
-  };
-
-  const handleSubmitOpportunity = async () => {
-    if (!activityName || !date || !time || !contactEmail || !contactName || !description) {
-      Alert.alert('Invalid input', 'Please fill in all fields with valid information.');
-      return;
-    }
-
-    try {
-      const opportunityData = {
-        communityId: selectedCommunity.communityId,
-        createdBy: auth.currentUser.uid,
-        date,
-        description,
-        hourValue: parseFloat(hours),
-        name: activityName,
-        time,
-      };
-
-      await addDoc(collection(firestore, 'opportunities'), opportunityData);
-
-      Alert.alert('Success', 'Opportunity submitted successfully.');
-      setActivityName('');
-      setDate('');
-      setTime('');
-      setContactEmail('');
-      setContactName('');
-      setDescription('');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit opportunity: ' + error.message);
-    }
-  };
-
-  const handleLogHours = async () => {
-    if (!hours || isNaN(hours) || Number(hours) <= 0) {
-      Alert.alert('Invalid input', 'Please enter a valid number of hours.');
-      return;
-    }
-
-    try {
-      const logData = {
-        opportunityId: selectedOpportunity.name,  // use name as ID or set your own unique ID
-        userId: auth.currentUser.uid,
-        hours: parseFloat(hours),
-        date: new Date().toISOString(),
-        status: 'Pending',  // pending approval by teacher
-      };
-
-      await addDoc(collection(firestore, 'hourRequests'), logData);  // Storing the request in a separate collection
-
-      Alert.alert('Success', 'Your hour log has been submitted for approval.');
-      setHours('');
-      setSelectedOpportunity(null);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to log hours: ' + error.message);
-    }
-  };
-
-  const renderCommunity = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.communityBox,
-        item.communityId === selectedCommunity?.communityId && styles.selectedBox,
-      ]}
-      onPress={() => handleCommunitySelect(item)}
-    >
-      <Text style={styles.communityTitle}>{item.communityName}</Text>
-      <Text>Hours Logged: {item.hoursLogged || 0}</Text>
-    </TouchableOpacity>
-  );
-
-  const renderOpportunity = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.communityBox,
-        item.name === selectedOpportunity?.name && styles.selectedBox,
-      ]}
-      onPress={() => handleOpportunitySelect(item)}
-    >
-      <Text style={styles.communityTitle}>{item.name}</Text>
-      <Text>Date: {item.date}</Text>
-      <Text>Time: {item.time}</Text>
-      <Text>Description: {item.description}</Text>
-      <Text>Hour Value: {item.hourValue}</Text>
-    </TouchableOpacity>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading data...</Text>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate('StudentHomePage')}
-      >
-        <Text style={styles.buttonText}>Back to Home</Text>
-      </TouchableOpacity>
-
-      <FlatList
-        data={joinedCommunities}
-        keyExtractor={(item) => item.communityId}
-        renderItem={renderCommunity}
-        ListEmptyComponent={<Text>No communities found.</Text>}
-      />
-
-      {selectedCommunity ? (
-        <>
-          <Text style={styles.selectedCommunityText}>
-            Requesting hours for: {selectedCommunity.communityName}
-          </Text>
-
-          {/* Opportunities Section */}
-          <FlatList
-            data={opportunities}
-            keyExtractor={(item) => item.name}
-            renderItem={renderOpportunity}
-            ListEmptyComponent={<Text>No opportunities found for this community.</Text>}
-          />
-
-          {selectedOpportunity ? (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter hours"
-                keyboardType="numeric"
-                value={hours}
-                onChangeText={setHours}
-              />
-              <TouchableOpacity style={styles.logButton} onPress={handleLogHours}>
-                <Text style={styles.logButtonText}>Log Hours</Text>
+    <PaperProvider>
+      <View style={styles.container}>
+        <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
+        
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Select Community</Text>
+            <FlatList
+              data={joinedCommunities}
+              keyExtractor={(item) => item.communityId}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.communityBox, selectedCommunity?.communityId === item.communityId && styles.selectedBox]}
+                  onPress={() => setSelectedCommunity(item)}
+                >
+                  <Text style={styles.communityTitle}>{item.communityName}</Text>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={<Text style={styles.emptyText}>No communities found.</Text>}
+            />
+          </View>
+          
+          {selectedCommunity && (
+            <View style={styles.section}>
+              <Text style={styles.selectedCommunityText}>Selected Community: {selectedCommunity.communityName}</Text>
+              <Text style={[styles.sectionTitle, styles.enhancedTitle]}>Log Hours</Text>
+              <View style={styles.timeContainer}>
+                <TextInput style={[styles.input, styles.timeInput]} placeholder="Hours" keyboardType="numeric" value={hours} onChangeText={setHours} />
+                <TextInput style={[styles.input, styles.timeInput]} placeholder="Minutes" keyboardType="numeric" value={minutes} onChangeText={setMinutes} />
+              </View>
+              <TextInput style={styles.input} placeholder="Activity Name" value={activityName} onChangeText={setActivityName} />
+              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
+                <Text style={styles.datePickerText}>{date.toDateString()}</Text>
               </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="Activity Name"
-                value={activityName}
-                onChangeText={setActivityName}
+              <DatePickerModal
+                locale="en"
+                mode="single" //Allows selecting a single date
+                visible={showDatePicker}
+                onDismiss={() => setShowDatePicker(false)} //Minimizes date picker box when x button is clicked
+                date={date}
+                onConfirm={(params) => {
+                  setShowDatePicker(false);
+                  setDate(params.date); //Updates the date within the text field based on the date the user has selected
+                }}
               />
-              <TextInput
-                style={styles.input}
-                placeholder="Date (YYYY-MM-DD)"
-                value={date}
-                onChangeText={setDate}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Time (HH:MM)"
-                value={time}
-                onChangeText={setTime}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Contact Verification Email"
-                value={contactEmail}
-                onChangeText={setContactEmail}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Contact Verification Name"
-                value={contactName}
-                onChangeText={setContactName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Description of Activity"
-                multiline
-                value={description}
-                onChangeText={setDescription}
-              />
-              <TouchableOpacity style={styles.logButton} onPress={handleSubmitOpportunity}>
-                <Text style={styles.logButtonText}>Submit Opportunity</Text>
+              <TextInput style={styles.input} placeholder="Contact Email" value={contactEmail} onChangeText={setContactEmail} />
+              <TextInput style={styles.input} placeholder="Contact Name" value={contactName} onChangeText={setContactName} />
+              <TextInput style={styles.input} placeholder="Description" multiline value={description} onChangeText={setDescription} />
+              <TouchableOpacity style={styles.logButton}>
+                <Text style={styles.logButtonText}>Submit</Text>
               </TouchableOpacity>
-            </>
+            </View>
           )}
-        </>
-      ) : (
-        <Text style={styles.selectCommunityText}>Select a community.</Text>
-      )}
-    </ScrollView>
+        </ScrollView>
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+            <MaterialIcons name="home" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <MaterialIcons name="search" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <MaterialIcons name="favorite" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+            <MaterialIcons name="person" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: '#1C1C1C',
     padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 10,
+  },
+  enhancedTitle: {
+    color: '#1f91d6', // Brighter color for emphasis
+  },
+  selectedCommunityText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 10,
   },
   communityBox: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2E2E2E',
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
   },
   selectedBox: {
-    borderColor: '#443939',
+    borderColor: '#1f91d6',
     borderWidth: 2,
   },
   communityTitle: {
+    color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
-  },
-  selectedCommunityText: {
-    marginTop: 10,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
   },
   input: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
+    backgroundColor: '#000',
+    color: '#FFF',
     padding: 10,
-    marginVertical: 10,
-    width: '100%',
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  datePickerButton: {
+    backgroundColor: '#000',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  datePickerText: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeInput: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   logButton: {
-    backgroundColor: '#443939',
+    backgroundColor: '#1f91d6',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
   },
   logButtonText: {
-    color: '#fff',
+    color: '#FFF',
     fontSize: 16,
-  },
-  selectCommunityText: {
-    marginTop: 10,
-    color: '#888',
-    fontSize: 16,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    backgroundColor: '#1f91d6',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
   },
 });
 

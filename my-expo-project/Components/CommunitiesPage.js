@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { firestore, auth } from './firebaseConfig';
 import { collection, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const CommunityScreen = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
@@ -37,20 +38,16 @@ const CommunityScreen = ({ navigation }) => {
     try {
       const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
   
-      // Check if the user has already joined this community
       if (joinedCommunities.some((c) => c.communityId === communityId)) {
         Alert.alert('Info', 'You have already joined this community.');
         return;
       }
   
-      // Update Firestore
       await updateDoc(userDocRef, {
         joinedCommunities: arrayUnion({ communityId, communityName, hoursLogged: 0 }),
       });
   
       Alert.alert('Success', `You have joined ${communityName}!`);
-      
-      // Update local state to reflect the changes
       setJoinedCommunities((prev) => [...prev, { communityId, communityName: communityName, hoursLogged: 0 }]);
     } catch (error) {
       Alert.alert('Error', 'Failed to join community: ' + error.message);
@@ -61,17 +58,13 @@ const CommunityScreen = ({ navigation }) => {
     try {
       const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
   
-      // Filter out the community the user wants to leave
       const updatedCommunities = joinedCommunities.filter((c) => c.communityId !== communityId);
   
-      // Update Firestore
       await updateDoc(userDocRef, {
         joinedCommunities: updatedCommunities,
       });
   
       Alert.alert('Success', 'You have left the community.');
-  
-      // Update local state
       setJoinedCommunities(updatedCommunities);
     } catch (error) {
       Alert.alert('Error', 'Failed to leave community: ' + error.message);
@@ -108,12 +101,6 @@ const CommunityScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate('StudentHomePage')}
-      >
-        <Text style={styles.buttonText}>Back to Home</Text>
-      </TouchableOpacity>
       <Text style={styles.title}>Communities</Text>
       <FlatList
         data={communities}
@@ -121,6 +108,22 @@ const CommunityScreen = ({ navigation }) => {
         renderItem={renderCommunity}
         ListEmptyComponent={<Text style={styles.emptyText}>No communities available at the moment.</Text>}
       />
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -128,72 +131,59 @@ const CommunityScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1C1C1C',
     padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 28,
-    marginBottom: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 15,
   },
   communityBox: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2E2E2E',
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 10,
-    borderColor: '#ccc',
-    borderWidth: 1,
   },
   communityTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 5,
   },
   communityDescription: {
     fontSize: 14,
+    color: '#CCC',
     marginBottom: 5,
   },
   communityGoal: {
     fontSize: 14,
+    color: '#FFF',
     marginBottom: 10,
-    color: '#555',
   },
   joinButton: {
-    backgroundColor: '#443939',
+    backgroundColor: '#1f91d6',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
   },
   joinButtonText: {
-    color: '#fff',
+    color: '#FFF',
     fontSize: 16,
-  },
-  joinedText: {
-    fontSize: 16,
-    color: 'green',
-    fontWeight: 'bold',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  backButton: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    backgroundColor: '#1f91d6',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyText: {
+    color: '#FFF',
     fontSize: 16,
     textAlign: 'center',
-    color: '#888',
     marginTop: 20,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 10,
   },
 });
 
