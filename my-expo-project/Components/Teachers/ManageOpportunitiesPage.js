@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
 import { firestore, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
 const ManageOpportunitiesScreen = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
+  const [joinedStudents, setJoinedStudents] = useState({});
 
   useEffect(() => {
     const fetchOpportunities = async () => {
@@ -22,8 +23,21 @@ const ManageOpportunitiesScreen = () => {
     fetchOpportunities();
   }, []);
 
+  const fetchJoinedStudents = async (opportunityId) => {
+    try {
+      const usersSnapshot = await getDocs(collection(firestore, 'users'));
+      const students = usersSnapshot.docs
+        .filter(doc => doc.data().joinedOpportunities?.includes(opportunityId))
+        .map(doc => ({ id: doc.id, ...doc.data() }));
+      setJoinedStudents(prev => ({ ...prev, [opportunityId]: students }));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch joined students: ' + error.message);
+    }
+  };
+
   const handleEdit = (opportunity) => {
     setEditingOpportunity(opportunity);
+    fetchJoinedStudents(opportunity.id);
   };
 
   const handleSave = async () => {
@@ -52,6 +66,27 @@ const ManageOpportunitiesScreen = () => {
       Alert.alert('Success', 'Opportunity deleted successfully.');
     } catch (error) {
       Alert.alert('Error', 'Failed to delete opportunity: ' + error.message);
+    }
+  };
+
+  const handleRemoveStudent = async (studentId, opportunityId) => {
+    try {
+      const userRef = doc(firestore, 'users', studentId);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        const updatedOpportunities = userDoc.data().joinedOpportunities.filter(id => id !== opportunityId);
+        await updateDoc(userRef, { joinedOpportunities: updatedOpportunities });
+
+        setJoinedStudents(prev => ({
+          ...prev,
+          [opportunityId]: prev[opportunityId].filter(student => student.id !== studentId)
+        }));
+
+        Alert.alert('Success', 'Student removed successfully.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to remove student: ' + error.message);
     }
   };
 
@@ -97,6 +132,17 @@ const ManageOpportunitiesScreen = () => {
                   value={String(editingOpportunity.hourValue)}
                   onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, hourValue: parseFloat(text) })}
                 />
+
+                <Text style={styles.subTitle}>Joined Students:</Text>
+                {joinedStudents[item.id]?.map((student) => (
+                  <View key={student.id} style={styles.studentBox}>
+                    <Text>{student.firstName} {student.lastName}</Text>
+                    <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveStudent(student.id, item.id)}>
+                      <Text style={styles.buttonText}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                   <Text style={styles.buttonText}>Save</Text>
                 </TouchableOpacity>
@@ -136,6 +182,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
   opportunityBox: {
     backgroundColor: '#fff',
     padding: 15,
@@ -154,6 +205,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginVertical: 10,
+  },
+  studentBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 5,
   },
   saveButton: {
     backgroundColor: '#4CAF50',
@@ -174,6 +234,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
+  },
+  removeButton: {
+    backgroundColor: '#FF5722',
+    padding: 5,
+    borderRadius: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
