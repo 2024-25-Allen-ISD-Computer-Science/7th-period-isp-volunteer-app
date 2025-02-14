@@ -132,20 +132,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    padding: 20,
+    paddingTop: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 70,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
     marginBottom: 15,
+    marginTop: 10, //this was newly added this week
   },
   communityBox: {
     backgroundColor: '#2E2E2E',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   communityTitle: {
     fontSize: 18,
@@ -183,7 +186,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#2E2E2E',
-    paddingVertical: 10,
+    paddingVertical: 5,
+    bottom: -35, //not here before (newly added this week)
+
   },
 });
 
