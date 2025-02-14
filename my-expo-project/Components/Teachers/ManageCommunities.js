@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput, ActivityIndicator } from 'react-native';
 import { auth, firestore } from '../firebaseConfig';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const ManageCommunities = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // New community input fields
+  // Input fields for new community
   const [communityName, setCommunityName] = useState('');
   const [description, setDescription] = useState('');
   const [hourGoal, setHourGoal] = useState('');
@@ -30,16 +30,14 @@ const ManageCommunities = ({ navigation }) => {
     fetchCommunities();
   }, []);
 
-  // Logic to create a new community
+  // Create a new community
   const handleCreateCommunity = async () => {
     const user = auth.currentUser;
     if (user) {
-      // Validate input
       if (!communityName || !description || !hourGoal) {
         Alert.alert('Error', 'Please fill in all fields');
         return;
       }
-
       if (isNaN(hourGoal) || Number(hourGoal) <= 0) {
         Alert.alert('Error', 'Please enter a valid hour goal');
         return;
@@ -53,10 +51,10 @@ const ManageCommunities = ({ navigation }) => {
           communityName,
           description,
           hourGoal: Number(hourGoal),
-          createdBy: user.uid, // Teacher's UID
+          createdBy: user.uid,
         };
 
-        // Add the new community to Firestore
+        // Add to Firestore
         const docRef = await addDoc(collection(firestore, 'communities'), newCommunity);
         Alert.alert('Success', 'Community created successfully!');
         setIsLoading(false);
@@ -66,7 +64,7 @@ const ManageCommunities = ({ navigation }) => {
         setDescription('');
         setHourGoal('');
 
-        // Navigate to the community settings page
+        // Navigate to settings
         navigation.navigate('ManageCommunitySettings', { communityId: docRef.id });
       } catch (error) {
         setIsLoading(false);
@@ -76,46 +74,50 @@ const ManageCommunities = ({ navigation }) => {
     }
   };
 
-  // Navigate to the community settings page when a community is clicked
+  // Navigate to community settings
   const handleCommunityClick = (communityId) => {
     navigation.navigate('ManageCommunitySettings', { communityId });
   };
 
   return (
     <View style={styles.container}>
+      {/* Title */}
       <Text style={styles.title}>Manage Communities</Text>
 
-      {/* Input fields for creating a community */}
+      {/* Input fields */}
       <TextInput
         style={styles.input}
         placeholder="Community Name"
+        placeholderTextColor="#888"
         value={communityName}
         onChangeText={setCommunityName}
       />
       <TextInput
         style={styles.input}
         placeholder="Community Description"
+        placeholderTextColor="#888"
         value={description}
         onChangeText={setDescription}
       />
       <TextInput
         style={styles.input}
         placeholder="Hour Goal"
+        placeholderTextColor="#888"
         keyboardType="numeric"
         value={hourGoal}
         onChangeText={setHourGoal}
       />
 
-      {/* Button to create new community */}
+      {/* Create Button */}
       <TouchableOpacity
-        style={styles.createButton}
+        style={[styles.createButton, isLoading && styles.disabledButton]}
         onPress={handleCreateCommunity}
         disabled={isLoading}
       >
-        <Text style={styles.createButtonText}>{isLoading ? 'Creating...' : 'Create New Community'}</Text>
+        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createButtonText}>Create Community</Text>}
       </TouchableOpacity>
 
-      {/* List of existing communities */}
+      {/* List of Communities */}
       <FlatList
         data={communities}
         keyExtractor={(item) => item.id}
@@ -124,9 +126,12 @@ const ManageCommunities = ({ navigation }) => {
             style={styles.communityBox}
             onPress={() => handleCommunityClick(item.id)}
           >
-            <Text style={styles.communityName}>{item.communityName}</Text>
+            <View style={styles.communityHeader}>
+              <Text style={styles.communityName}>{item.communityName}</Text>
+              <MaterialIcons name="arrow-forward-ios" size={18} color="#bbb" />
+            </View>
             <Text style={styles.communityDescription}>{item.description}</Text>
-            <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
+            <Text style={styles.communityGoal}>🎯 Goal: {item.hourGoal} hours</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={<Text style={styles.noCommunitiesText}>No communities found.</Text>}
@@ -138,57 +143,73 @@ const ManageCommunities = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f4f4f4',
+    backgroundColor: '#1C1C1C', // Dark background
     padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
     marginBottom: 20,
   },
   input: {
-    backgroundColor: '#fff',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#333',
+    color: '#FFF',
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#555',
     marginBottom: 10,
   },
   createButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#1f91d6',
     padding: 15,
-    borderRadius: 5,
+    borderRadius: 8,
     marginBottom: 20,
     alignItems: 'center',
   },
   createButtonText: {
-    color: '#fff',
+    color: '#FFF',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#555',
   },
   communityBox: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2E2E2E',
     padding: 15,
+    borderRadius: 8,
     marginBottom: 10,
-    borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#444',
+  },
+  communityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
   communityName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#FFF',
   },
   communityDescription: {
     fontSize: 14,
-    color: '#777',
+    color: '#CCC',
+    marginBottom: 5,
   },
   communityGoal: {
     fontSize: 14,
-    color: '#444',
+    color: '#1f91d6',
+    fontWeight: 'bold',
   },
   noCommunitiesText: {
     fontSize: 16,
-    color: '#aaa',
+    color: '#777',
     textAlign: 'center',
+    marginTop: 20,
   },
 });
 
