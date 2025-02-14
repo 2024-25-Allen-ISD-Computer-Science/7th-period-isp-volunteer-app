@@ -6,7 +6,7 @@ import { firestore } from '../firebaseConfig';
 const TeacherManagePage = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
   const [students, setStudents] = useState({});
-  const teacherId = "TAiOstXgYeR3DGsOjX4EEXAgsf43"; // Replace with actual logged-in teacher ID
+  const teacherId = "TAiOstXgYeR3DGsOjX4EEXAgsf43";
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -15,7 +15,7 @@ const TeacherManagePage = ({ navigation }) => {
         const communityList = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          if (data.createdBy === teacherId) { 
+          if (data.createdBy === teacherId) {
             communityList.push({ id: doc.id, ...data });
           }
         });
@@ -45,7 +45,6 @@ const TeacherManagePage = ({ navigation }) => {
           }
         }
       });
-
       return studentList;
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -78,9 +77,7 @@ const TeacherManagePage = ({ navigation }) => {
         (comm) => comm.communityId !== communityId
       );
 
-      await updateDoc(userRef, {
-        joinedCommunities: updatedCommunities,
-      });
+      await updateDoc(userRef, { joinedCommunities: updatedCommunities });
 
       Alert.alert('Success', 'Student removed from the community.');
       setStudents((prev) => ({
@@ -99,36 +96,42 @@ const TeacherManagePage = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.communityContainer}>
-            <Text style={styles.communityName}>{item.communityName}</Text>
-            <FlatList
-              data={students[item.id] || []}
-              keyExtractor={(student) => student.id}
-              renderItem={({ item: student }) => (
-                <View style={styles.studentContainer}>
-                  <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
+  <Text style={styles.communityName}>{item.communityName}</Text>
+
+  <FlatList
+    data={students[item.id] || []}
+    keyExtractor={(student) => student.id}
+    renderItem={({ item: student }) => (
+      <View style={styles.studentContainer}>
+                <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
+                {/* Ensure buttons are aligned in columns */}
+                <View style={styles.buttonContainer}>
                   <TouchableOpacity
-                    style={styles.profileButton}
+                    style={[styles.button, styles.profileButton]}
                     onPress={() => navigation.navigate('StudentProfileScreen', { studentId: student.id })}
                   >
-                    <Text style={styles.profileButtonText}>View Profile</Text>
+                    <Text style={styles.buttonText}>View Profile</Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    style={styles.verifyButton}
+                    style={[styles.button, styles.verifyButton]}
                     onPress={() => navigation.navigate('VerifyHours', { studentId: student.id })}
                   >
-                    <Text style={styles.verifyButtonText}>Verify Hours</Text>
+                    <Text style={styles.buttonText}>Verify Hours</Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    style={styles.removeButton}
+                    style={[styles.button, styles.removeButton]}
                     onPress={() => handleRemoveStudent(item.id, student.id)}
                   >
-                    <Text style={styles.removeButtonText}>Remove</Text>
+                    <Text style={styles.buttonText}>Remove</Text>
                   </TouchableOpacity>
                 </View>
-              )}
-              ListEmptyComponent={<Text style={styles.emptyMessage}>No students found in this community.</Text>}
-            />
-          </View>
+              </View>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyMessage}>No students found in this community.</Text>}
+          />
+        </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyMessage}>No communities found.</Text>}
       />
@@ -137,67 +140,57 @@ const TeacherManagePage = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
   communityContainer: {
     padding: 15,
-    backgroundColor: '#ddd',
+    backgroundColor: '#2E2E2E',
     marginBottom: 10,
-    borderRadius: 5,
+    borderRadius: 10,
   },
   communityName: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#FFF',
     textAlign: 'center',
+    marginBottom: 5,
   },
   studentContainer: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: '#ccc',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#333',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    marginBottom: 5,
   },
   studentName: {
     fontSize: 16,
+    color: '#FFF',
+    flex: 1, // Names take only necessary space
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 300, // Proper alignment across all students
+  },
+  button: {
+    width: 100, // Equal width for all buttons
+    paddingVertical: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   profileButton: {
-    backgroundColor: '#3498db',
-    padding: 8,
-    borderRadius: 5,
-  },
-  profileButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    backgroundColor: '#1f91d6',
   },
   verifyButton: {
     backgroundColor: '#4CAF50',
-    padding: 8,
-    borderRadius: 5,
-  },
-  verifyButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
   },
   removeButton: {
     backgroundColor: '#ff4444',
-    padding: 8,
-    borderRadius: 5,
   },
-  removeButtonText: {
-    color: '#fff',
+  buttonText: {
+    color: '#FFF',
     fontWeight: 'bold',
-  },
-  emptyMessage: {
-    textAlign: 'center',
-    marginTop: 10,
-    fontSize: 16,
-    color: '#888',
   },
 });
 
