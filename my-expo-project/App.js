@@ -21,7 +21,8 @@ import { ScreenStackHeaderLeftView } from 'react-native-screens';
 import TeacherManagePage from './Components/Teachers/TeacherManagePage';
 import VerifyHoursPage from './Components/Teachers/VerifyHoursPage';
 import ManageOpportunitiesScreen from './Components/Teachers/ManageOpportunitiesPage';
-
+import ViewLoggedHoursScreen from './Components/ViewLoggedHoursScreen';
+import StudentProfileScreen from './Components/Teachers/StudentProfileScreen';
 
 const theme = {
   ...DefaultTheme,
@@ -52,6 +53,8 @@ const App = () => {
         <Stack.Screen options={{ HeaderShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
         <Stack.Screen options={{ HeaderShown: false }} name="VerifyHours" component={VerifyHoursPage} />
         <Stack.Screen options={{ HeaderShown: false }} name="ManageOpportunities" component={ManageOpportunitiesScreen} />
+        <Stack.Screen options={{ HeaderShown: false }} name="ViewLoggedHours" component={ViewLoggedHoursScreen} />
+        <Stack.Screen options={{ HeaderShown: false }} name="StudentProfileScreen" component={StudentProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>

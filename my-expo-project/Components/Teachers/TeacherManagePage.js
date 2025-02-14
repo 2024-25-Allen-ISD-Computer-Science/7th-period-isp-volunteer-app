@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDocs, updateDoc, doc, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 
 const TeacherManagePage = ({ navigation }) => {
@@ -107,16 +107,22 @@ const TeacherManagePage = ({ navigation }) => {
                 <View style={styles.studentContainer}>
                   <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
                   <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveStudent(item.id, student.id)}
+                    style={styles.profileButton}
+                    onPress={() => navigation.navigate('StudentProfileScreen', { studentId: student.id })}
                   >
-                    <Text style={styles.removeButtonText}>Remove</Text>
+                    <Text style={styles.profileButtonText}>View Profile</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.verifyButton}
                     onPress={() => navigation.navigate('VerifyHours', { studentId: student.id })}
                   >
                     <Text style={styles.verifyButtonText}>Verify Hours</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => handleRemoveStudent(item.id, student.id)}
+                  >
+                    <Text style={styles.removeButtonText}>Remove</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -160,12 +166,12 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 16,
   },
-  removeButton: {
-    backgroundColor: '#ff4444',
+  profileButton: {
+    backgroundColor: '#3498db',
     padding: 8,
     borderRadius: 5,
   },
-  removeButtonText: {
+  profileButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -175,6 +181,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   verifyButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  removeButton: {
+    backgroundColor: '#ff4444',
+    padding: 8,
+    borderRadius: 5,
+  },
+  removeButtonText: {
     color: '#fff',
     fontWeight: 'bold',
   },
