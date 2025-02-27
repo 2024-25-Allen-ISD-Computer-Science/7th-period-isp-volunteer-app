@@ -1,30 +1,29 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const sgMail = require('@sendgrid/mail');
+const { onCall } = require("firebase-functions/v2/https");
+const { setGlobalOptions } = require("firebase-functions/v2/options");
+const admin = require("firebase-admin");
+const sgMail = require("@sendgrid/mail");
+require("dotenv").config(); // Load environment variables
 
-// Initialize Firebase Admin SDK
 admin.initializeApp();
 
-// Retrieve SendGrid API key from Firebase environment variables
-const sendGridKey = functions.config().sendgrid.key;
-sgMail.setApiKey(sendGridKey);
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+sgMail.setApiKey(SENDGRID_API_KEY);
 
-// Firebase function to send email
-exports.sendEmail = functions.https.onCall(async (data, context) => {
-  const { to, subject, message } = data;
+exports.sendEmail = onCall({ enforceAppCheck: false }, async (request) => {
+  const { to, subject, message } = request.data;
 
   const msg = {
     to: to,
-    from: 'winneronezohaib@gmail.com', // Use your verified SendGrid email
+    from: "winneronezohaib@gmail.com",
     subject: subject,
     text: message,
   };
 
   try {
     await sgMail.send(msg);
-    return { success: true, message: 'Email sent successfully!' };
+    return { success: true, message: "Email sent successfully!" };
   } catch (error) {
-    console.error('Error sending email:', error);
-    return { success: false, message: 'Error sending email.' };
+    console.error("Error sending email:", error);
+    return { success: false, message: "Error sending email." };
   }
 });

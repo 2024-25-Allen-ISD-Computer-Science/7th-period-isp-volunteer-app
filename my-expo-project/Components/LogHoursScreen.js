@@ -25,8 +25,7 @@ const LogHoursScreen = ({ navigation }) => {
       try {
         const userDoc = await getDoc(doc(firestore, 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setJoinedCommunities(userData.joinedCommunities || []);
+          setJoinedCommunities(userDoc.data().joinedCommunities || []);
         }
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch user data: ' + error.message);
@@ -37,12 +36,44 @@ const LogHoursScreen = ({ navigation }) => {
     fetchUserData();
   }, []);
 
-  const sendVerificationEmail = async () => {
-    if (!contactEmail || !contactName || !selectedCommunity || !activityName) {
+  const handleSubmit = async () => {
+    if (!selectedCommunity || !activityName || !hours || !minutes || !contactEmail || !contactName) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
 
+    const newRequest = {
+      userId: auth.currentUser.uid,
+      communityId: selectedCommunity.communityId,
+      communityName: selectedCommunity.communityName,
+      activityName,
+      hours: parseInt(hours),
+      minutes: parseInt(minutes),
+      date: date.toISOString(),
+      contactEmail,
+      contactName,
+      description,
+      status: 'pending',
+      createdAt: new Date(),
+    };
+
+    try {
+      await addDoc(collection(firestore, 'hourRequests'), newRequest);
+      sendVerificationEmail();
+      Alert.alert('Success', 'Your hours have been submitted for verification.');
+      setActivityName('');
+      setHours('');
+      setMinutes('');
+      setContactEmail('');
+      setContactName('');
+      setDescription('');
+      setSelectedCommunity(null);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit hours: ' + error.message);
+    }
+  };
+
+  const sendVerificationEmail = async () => {
     const emailFunction = httpsCallable(functions, 'sendEmail');
 
     try {
@@ -52,13 +83,10 @@ const LogHoursScreen = ({ navigation }) => {
         message: `Hello ${contactName},\n\nPlease verify the hours for the student participating in ${activityName} within the ${selectedCommunity.communityName} community.\n\nThank you!`,
       });
 
-      if (response.data.success) {
-        Alert.alert('Success', 'Verification email sent successfully.');
-      } else {
+      if (!response.data.success) {
         Alert.alert('Error', 'Failed to send verification email.');
       }
     } catch (error) {
-      console.error('Error sending email:', error);
       Alert.alert('Error', 'An error occurred while sending the email.');
     }
   };
@@ -67,7 +95,6 @@ const LogHoursScreen = ({ navigation }) => {
     <PaperProvider>
       <View style={styles.container}>
         <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
-
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Select Community</Text>
@@ -112,116 +139,29 @@ const LogHoursScreen = ({ navigation }) => {
               <TextInput style={styles.input} placeholder="Contact Email" value={contactEmail} onChangeText={setContactEmail} />
               <TextInput style={styles.input} placeholder="Contact Name" value={contactName} onChangeText={setContactName} />
               <TextInput style={styles.input} placeholder="Description" multiline value={description} onChangeText={setDescription} />
-              <TouchableOpacity style={styles.logButton} onPress={sendVerificationEmail}>
+              <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
                 <Text style={styles.logButtonText}>Submit</Text>
               </TouchableOpacity>
             </View>
           )}
         </ScrollView>
-
-        <View style={styles.bottomNav}>
-          <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
-            <MaterialIcons name="home" size={30} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <MaterialIcons name="search" size={30} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <MaterialIcons name="favorite" size={30} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-            <MaterialIcons name="person" size={30} color="white" />
-          </TouchableOpacity>
-        </View>
       </View>
     </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1C1C1C',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 10,
-  },
-  enhancedTitle: {
-    color: '#1f91d6',
-  },
-  selectedCommunityText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#2E2E2E',
-    paddingVertical: 10,
-  },
-  communityBox: {
-    backgroundColor: '#2E2E2E',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  selectedBox: {
-    borderColor: '#1f91d6',
-    borderWidth: 2,
-  },
-  communityTitle: {
-    color: '#FFF',
-    fontSize: 16,
-  },
-  input: {
-    backgroundColor: '#000',
-    color: '#FFF',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  datePickerButton: {
-    backgroundColor: '#000',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  datePickerText: {
-    color: '#FFF',
-    fontSize: 16,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  timeInput: {
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  logButton: {
-    backgroundColor: '#1f91d6',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  logButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-  },
+  container: { flex: 1, backgroundColor: '#1C1C1C', padding: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 15 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFF', marginBottom: 10 },
+  enhancedTitle: { color: '#1f91d6' },
+  selectedCommunityText: { fontSize: 18, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 10 },
+  communityBox: { backgroundColor: '#2E2E2E', padding: 15, borderRadius: 10, marginBottom: 10 },
+  selectedBox: { borderColor: '#1f91d6', borderWidth: 2 },
+  communityTitle: { color: '#FFF', fontSize: 16 },
+  input: { backgroundColor: '#000', color: '#FFF', padding: 10, borderRadius: 5, marginBottom: 10 },
+  logButton: { backgroundColor: '#1f91d6', padding: 15, borderRadius: 5, alignItems: 'center' },
+  logButtonText: { color: '#FFF', fontSize: 16 },
 });
 
 export default LogHoursScreen;
