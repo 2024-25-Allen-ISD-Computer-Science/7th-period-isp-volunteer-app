@@ -1,27 +1,30 @@
-const functions = require("firebase-functions");
-const sgMail = require("@sendgrid/mail");
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+const sgMail = require('@sendgrid/mail');
 
-// Get SendGrid API Key from environment variables
-sgMail.setApiKey(functions.config().sendgrid.apikey);
+// Initialize Firebase Admin SDK
+admin.initializeApp();
 
-// Cloud function to send email
-exports.sendEmail = functions.https.onRequest((req, res) => {
-  const {to, subject, text} = req.body;
+// Set SendGrid API key
+sgMail.setApiKey('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'); // Replace with your SendGrid API Key
+
+// Firebase function to send email
+exports.sendEmail = functions.https.onCall(async (data, context) => {
+  const { to, subject, message } = data;
 
   const msg = {
-    to: to, // recipient's email
-    from: "your-email@example.com", // your verified sender email on SendGrid
+    to: to,
+    from: 'winneronezohaib@gmail.com', // Use your verified SendGrid email address
     subject: subject,
-    text: text,
+    text: message,
   };
 
-  sgMail
-      .send(msg)
-      .then(() => {
-        res.status(200).send("Email sent successfully");
-      })
-      .catch((error) => {
-        console.error(error);
-        res.status(500).send("Failed to send email");
-      });
+  try {
+    // Send email using SendGrid
+    await sgMail.send(msg);
+    return { success: true, message: 'Email sent successfully!' };
+  } catch (error) {
+    console.error('Error sending email: ', error);
+    return { success: false, message: 'Error sending email.' };
+  }
 });
