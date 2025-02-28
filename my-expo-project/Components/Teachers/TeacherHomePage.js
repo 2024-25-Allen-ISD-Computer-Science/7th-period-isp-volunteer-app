@@ -96,7 +96,7 @@ const TeacherHomePage = ({ navigation }) => {
         onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('ManageOpportunities')}
       >
-        <Text style={styles.boxText}>Manage Events</Text>
+        <Text style={styles.boxText}>Manage Opportunities</Text>
       </Pressable>
     </View>
   );

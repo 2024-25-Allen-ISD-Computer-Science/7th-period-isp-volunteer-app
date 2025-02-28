@@ -22,6 +22,7 @@ import TeacherManagePage from './Components/Teachers/TeacherManagePage';
 import VerifyHoursPage from './Components/Teachers/VerifyHoursPage';
 import ManageOpportunitiesScreen from './Components/Teachers/ManageOpportunitiesPage';
 import ViewLoggedHoursScreen from './Components/ViewLoggedHoursScreen';
+import StudentMap from './Components/StudentMap';
 import StudentProfileScreen from './Components/Teachers/StudentProfileScreen';
 
 const theme = {
@@ -55,6 +56,7 @@ const App = () => {
         <Stack.Screen options={{ HeaderShown: false }} name="ManageOpportunities" component={ManageOpportunitiesScreen} />
         <Stack.Screen options={{ HeaderShown: false }} name="ViewLoggedHours" component={ViewLoggedHoursScreen} />
         <Stack.Screen options={{ HeaderShown: false }} name="StudentProfileScreen" component={StudentProfileScreen} />
+        <Stack.Screen options={{ HeaderShown: false }} name="StudentMap" component={StudentMap} />
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>

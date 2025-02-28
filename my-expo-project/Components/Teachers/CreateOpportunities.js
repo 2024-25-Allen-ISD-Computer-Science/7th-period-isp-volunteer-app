@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Picker } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { DatePickerModal } from 'react-native-paper-dates';
 import { firestore, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const CreateOpportunities = ({ navigation }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [time, setTime] = useState('');
   const [hourValue, setHourValue] = useState('');
-  const [maxSignUps, setMaxSignUps] = useState(''); // New state for maximum sign-ups
+  const [maxSignUps, setMaxSignUps] = useState('');
   const [communities, setCommunities] = useState([]);
   const [selectedCommunity, setSelectedCommunity] = useState('');
 
-  // Fetch communities created by the teacher
   useEffect(() => {
     const fetchCommunities = async () => {
       const user = auth.currentUser;
@@ -22,15 +25,12 @@ const CreateOpportunities = ({ navigation }) => {
         const q = query(communitiesRef, where('createdBy', '==', user.uid));
         const querySnapshot = await getDocs(q);
 
-        const fetchedCommunities = [];
-        querySnapshot.forEach((doc) => {
-          fetchedCommunities.push({ id: doc.id, communityName: doc.data().communityName });
-        });
+        const fetchedCommunities = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          communityName: doc.data().communityName,
+        }));
 
         setCommunities(fetchedCommunities);
-        if (fetchedCommunities.length > 0) {
-          setSelectedCommunity(fetchedCommunities[0].id); // Set default selected community
-        }
       }
     };
 
@@ -38,31 +38,33 @@ const CreateOpportunities = ({ navigation }) => {
   }, []);
 
   const handleCreateOpportunity = async () => {
-    const user = auth.currentUser;
+    if (!selectedCommunity) {
+      Alert.alert('Error', 'Please select a community.');
+      return;
+    }
 
-    if (user && selectedCommunity) {
+    const user = auth.currentUser;
+    if (user) {
       try {
         const opportunityData = {
           name,
           description,
-          date,
+          date: date.toISOString(),
           time,
           hourValue: parseInt(hourValue, 10),
-          maxSignUps: parseInt(maxSignUps, 10), // Add maxSignUps to the data
-          currentSignUps: 0, // Initialize the current sign-ups as 0
+          maxSignUps: parseInt(maxSignUps, 10),
+          currentSignUps: 0,
           communityId: selectedCommunity,
           createdBy: user.uid,
         };
 
         await addDoc(collection(firestore, 'opportunities'), opportunityData);
         Alert.alert('Success', 'Opportunity created successfully!');
-        navigation.goBack(); // Go back to the previous page
+        navigation.goBack();
       } catch (error) {
         console.error(error);
         Alert.alert('Error', 'Failed to create opportunity.');
       }
-    } else {
-      Alert.alert('Error', 'Please select a community.');
     }
   };
 
@@ -70,72 +72,96 @@ const CreateOpportunities = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Create Opportunity</Text>
 
-      {/* Opportunity Name Input */}
       <TextInput
         style={styles.input}
         placeholder="Opportunity Name"
+        placeholderTextColor="#999"
         value={name}
         onChangeText={setName}
       />
 
-      {/* Description Input */}
       <TextInput
         style={styles.input}
         placeholder="Description"
+        placeholderTextColor="#999"
         value={description}
         onChangeText={setDescription}
       />
 
-      {/* Date Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Date (e.g., 2024-12-31)"
-        value={date}
-        onChangeText={setDate}
+      <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
+        <Text style={styles.datePickerText}>{date.toDateString()}</Text>
+      </TouchableOpacity>
+      <DatePickerModal
+        locale="en"
+        mode="single"
+        visible={showDatePicker}
+        onDismiss={() => setShowDatePicker(false)}
+        date={date}
+        onConfirm={(params) => {
+          setShowDatePicker(false);
+          setDate(params.date);
+        }}
       />
 
-      {/* Time Input */}
       <TextInput
         style={styles.input}
         placeholder="Time (e.g., 10:00-11:00)"
+        placeholderTextColor="#999"
         value={time}
         onChangeText={setTime}
       />
 
-      {/* Hour Value Input */}
       <TextInput
         style={styles.input}
         placeholder="Hour Value"
-        value={hourValue}
+        placeholderTextColor="#999"
         keyboardType="numeric"
+        value={hourValue}
         onChangeText={setHourValue}
       />
 
-      {/* Max Sign-Ups Input */}
       <TextInput
         style={styles.input}
         placeholder="Maximum Sign-Ups"
-        value={maxSignUps}
+        placeholderTextColor="#999"
         keyboardType="numeric"
+        value={maxSignUps}
         onChangeText={setMaxSignUps}
       />
 
-      {/* Community Picker */}
       <Text style={styles.label}>Assign to Community:</Text>
-      <Picker
-        selectedValue={selectedCommunity}
-        onValueChange={(itemValue) => setSelectedCommunity(itemValue)}
-        style={styles.picker}
-      >
-        {communities.map((community) => (
-          <Picker.Item key={community.id} label={community.communityName} value={community.id} />
-        ))}
-      </Picker>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={selectedCommunity}
+          onValueChange={(itemValue) => setSelectedCommunity(itemValue)}
+          style={styles.picker}
+          dropdownIconColor="#FFF"
+        >
+          <Picker.Item label="Select a Community" value="" color="#999" />
+          {communities.map((community) => (
+            <Picker.Item key={community.id} label={community.communityName} value={community.id} />
+          ))}
+        </Picker>
+      </View>
 
-      {/* Create Opportunity Button */}
       <TouchableOpacity style={styles.createButton} onPress={handleCreateOpportunity}>
         <Text style={styles.createButtonText}>Create Opportunity</Text>
       </TouchableOpacity>
+
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -143,44 +169,69 @@ const CreateOpportunities = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f4f4f4',
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 80,
+    backgroundColor: '#1C1C1C',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
     marginBottom: 20,
   },
   input: {
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#2E2E2E',
+    color: '#FFF',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  datePickerButton: {
+    backgroundColor: '#2E2E2E',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  datePickerText: {
+    color: '#FFF',
+    fontSize: 16,
   },
   label: {
     fontSize: 16,
-    marginBottom: 10,
+    color: '#FFF',
+    marginBottom: 5,
+  },
+  pickerContainer: {
+    backgroundColor: '#2E2E2E',
+    borderRadius: 8,
+    marginBottom: 15,
   },
   picker: {
-    height: 50,
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    marginBottom: 15,
-    borderRadius: 5,
+    color: '#FFF',
   },
   createButton: {
-    backgroundColor: '#4CAF50',
-    padding: 15,
-    borderRadius: 5,
+    backgroundColor: '#1f91d6',
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
+    marginTop: 10,
   },
   createButtonText: {
-    color: '#fff',
+    color: '#FFF',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 12,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
 });
 

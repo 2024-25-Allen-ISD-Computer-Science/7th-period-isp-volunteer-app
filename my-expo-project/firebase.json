@@ -9,10 +9,19 @@
         "firebase-debug.log",
         "firebase-debug.*.log",
         "*.local"
+<<<<<<< HEAD
       ],
       "predeploy": [
         "npm --prefix \"$RESOURCE_DIR\" run lint"
       ]
     }
   ]
+=======
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "public"
+  }
+>>>>>>> d8678fa638c110ddb20d32fbb02386ba9c03f087
 }
