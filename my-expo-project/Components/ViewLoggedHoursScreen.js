@@ -13,12 +13,21 @@ const ViewLoggedHoursScreen = ({ navigation }) => {
     const fetchLoggedHours = async () => {
       try {
         const hoursQuery = query(
-          collection(firestore, 'loggedHours'),
+          collection(firestore, 'hourRequests'),
           where('userId', '==', auth.currentUser.uid)
         );
         
         const querySnapshot = await getDocs(hoursQuery);
-        const hoursData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const hoursData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          activityName: doc.data().activityName,
+          communityName: doc.data().communityName,
+          date: doc.data().date,
+          hours: doc.data().hours,
+          minutes: doc.data().minutes,
+          status: doc.data().status,
+          description: doc.data().description
+        }));
         setLoggedHours(hoursData);
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch logged hours: ' + error.message);
@@ -48,6 +57,8 @@ const ViewLoggedHoursScreen = ({ navigation }) => {
                 <Text style={styles.logText}>Activity: {item.activityName}</Text>
                 <Text style={styles.logText}>Date: {new Date(item.date).toDateString()}</Text>
                 <Text style={styles.logText}>Hours: {item.hours}h {item.minutes}m</Text>
+                <Text style={styles.logText}>Status: {item.status}</Text>
+                <Text style={styles.logText}>Description: {item.description}</Text>
               </View>
             )}
           />
