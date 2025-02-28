@@ -101,6 +101,15 @@ const StudentHomePage = ({ navigation }) => {
       >
         <Text style={styles.boxText}>View Logged Hours</Text>
       </Pressable>
+
+      <Pressable
+        style={[styles.box, hoveredButton === 'studentMap' && styles.hoveredBox]}
+        onHoverIn={() => setHoveredButton('studentMap')}
+        onHoverOut={() => setHoveredButton(null)}
+        onPress={() => navigation.navigate('StudentMap')}
+      >
+        <Text style={styles.boxText}>View Map</Text>
+      </Pressable>
     </View>
   );
 };
