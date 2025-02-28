@@ -34,3 +34,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 our.env
+<<<<<<< HEAD
+=======
+.env
+functions/.env
+functions/firebase-debug.log
+>>>>>>> d8678fa638c110ddb20d32fbb02386ba9c03f087

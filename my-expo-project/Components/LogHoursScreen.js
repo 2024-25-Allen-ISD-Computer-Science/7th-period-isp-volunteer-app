@@ -4,6 +4,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { MaterialIcons } from '@expo/vector-icons';
 import { firestore, auth } from './firebaseConfig';
 import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { Provider as PaperProvider } from 'react-native-paper';
 
 const LogHoursScreen = ({ navigation }) => {
@@ -37,6 +38,61 @@ const LogHoursScreen = ({ navigation }) => {
     };
     fetchUserData();
   }, []);
+
+  const handleSubmit = async () => {
+    if (!selectedCommunity || !activityName || !hours || !minutes || !contactEmail || !contactName) {
+      Alert.alert('Error', 'Please fill in all required fields.');
+      return;
+    }
+
+    const newRequest = {
+      userId: auth.currentUser.uid,
+      communityId: selectedCommunity.communityId,
+      communityName: selectedCommunity.communityName,
+      activityName,
+      hours: parseInt(hours),
+      minutes: parseInt(minutes),
+      date: date.toISOString(),
+      contactEmail,
+      contactName,
+      description,
+      status: 'pending',
+      createdAt: new Date(),
+    };
+
+    try {
+      await addDoc(collection(firestore, 'hourRequests'), newRequest);
+      sendVerificationEmail();
+      Alert.alert('Success', 'Your hours have been submitted for verification.');
+      setActivityName('');
+      setHours('');
+      setMinutes('');
+      setContactEmail('');
+      setContactName('');
+      setDescription('');
+      setSelectedCommunity(null);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit hours: ' + error.message);
+    }
+  };
+
+  const sendVerificationEmail = async () => {
+    const emailFunction = httpsCallable(functions, 'sendEmail');
+
+    try {
+      const response = await emailFunction({
+        to: contactEmail,
+        subject: `Verify Hours for ${activityName}`,
+        message: `Hello ${contactName},\n\nPlease verify the hours for the student participating in ${activityName} within the ${selectedCommunity.communityName} community.\n\nThank you!`,
+      });
+
+      if (!response.data.success) {
+        Alert.alert('Error', 'Failed to send verification email.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An error occurred while sending the email.');
+    }
+  };
 
   return (
     <PaperProvider>
@@ -87,7 +143,7 @@ const LogHoursScreen = ({ navigation }) => {
               <TextInput style={styles.input} placeholder="Contact Email" value={contactEmail} onChangeText={setContactEmail} />
               <TextInput style={styles.input} placeholder="Contact Name" value={contactName} onChangeText={setContactName} />
               <TextInput style={styles.input} placeholder="Description" multiline value={description} onChangeText={setDescription} />
-              <TouchableOpacity style={styles.logButton}>
+              <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
                 <Text style={styles.logButtonText}>Submit</Text>
               </TouchableOpacity>
             </View>
@@ -197,7 +253,7 @@ const styles = StyleSheet.create({
   logButtonText: {
     color: '#FFF',
     fontSize: 16,
-  },
+  }
 });
 
 export default LogHoursScreen;
