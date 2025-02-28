@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
-import { MAP_API_KEY } from "@env"; // Importing API Key from .env
+import { MAP_API_KEY } from "@env";
 
 const containerStyle = {
   width: "100%",
