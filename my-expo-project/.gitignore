@@ -35,3 +35,5 @@ yarn-error.*
 *.tsbuildinfo
 our.env
 .env
+functions/.env
+functions/firebase-debug.log
