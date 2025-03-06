@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { MaterialIcons } from '@expo/vector-icons';
-import { firestore, auth } from './firebaseConfig';
-import { doc, getDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { firestore, auth, functions } from './firebaseConfig';
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Provider as PaperProvider } from 'react-native-paper';
 
@@ -18,8 +18,6 @@ const LogHoursScreen = ({ navigation }) => {
   const [contactEmail, setContactEmail] = useState('');
   const [contactName, setContactName] = useState('');
   const [description, setDescription] = useState('');
-  const [opportunities, setOpportunities] = useState([]);
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,7 +84,9 @@ const LogHoursScreen = ({ navigation }) => {
         message: `Hello ${contactName},\n\nPlease verify the hours for the student participating in ${activityName} within the ${selectedCommunity.communityName} community.\n\nThank you!`,
       });
 
-      if (!response.data.success) {
+      if (response.data.success) {
+        Alert.alert('Success', 'Verification email sent successfully!');
+      } else {
         Alert.alert('Error', 'Failed to send verification email.');
       }
     } catch (error) {
@@ -98,7 +98,7 @@ const LogHoursScreen = ({ navigation }) => {
     <PaperProvider>
       <View style={styles.container}>
         <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
-        
+
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Select Community</Text>
@@ -116,7 +116,7 @@ const LogHoursScreen = ({ navigation }) => {
               ListEmptyComponent={<Text style={styles.emptyText}>No communities found.</Text>}
             />
           </View>
-          
+
           {selectedCommunity && (
             <View style={styles.section}>
               <Text style={styles.selectedCommunityText}>Selected Community: {selectedCommunity.communityName}</Text>
@@ -131,13 +131,13 @@ const LogHoursScreen = ({ navigation }) => {
               </TouchableOpacity>
               <DatePickerModal
                 locale="en"
-                mode="single" //Allows selecting a single date
+                mode="single"
                 visible={showDatePicker}
-                onDismiss={() => setShowDatePicker(false)} //Minimizes date picker box when x button is clicked
+                onDismiss={() => setShowDatePicker(false)}
                 date={date}
                 onConfirm={(params) => {
                   setShowDatePicker(false);
-                  setDate(params.date); //Updates the date within the text field based on the date the user has selected
+                  setDate(params.date);
                 }}
               />
               <TextInput style={styles.input} placeholder="Contact Email" value={contactEmail} onChangeText={setContactEmail} />
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   enhancedTitle: {
-    color: '#1f91d6', // Brighter color for emphasis
+    color: '#1f91d6',
   },
   selectedCommunityText: {
     fontSize: 18,

@@ -1,22 +1,20 @@
 {
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "functions",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
-    }
-  ],
+  "functions": {
+    "source": "emails",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "*.local"
+    ]
+  },
   "hosting": {
     "public": "public",
     "rewrites": [
       {
-        "source": "/**"
+        "source": "/**",
+        "destination": "/index.html"
       }
     ]
   },
