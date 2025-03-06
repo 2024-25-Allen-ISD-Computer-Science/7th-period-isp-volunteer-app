@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput, ActivityIndicator } from 'react-native';
+import { DatePickerModal } from 'react-native-paper-dates'; // Use the working date picker
 import { auth, firestore } from '../firebaseConfig';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Provider as PaperProvider } from 'react-native-paper'; // Required for DatePickerModal
 
 const ManageCommunities = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
@@ -12,6 +14,8 @@ const ManageCommunities = ({ navigation }) => {
   const [communityName, setCommunityName] = useState('');
   const [description, setDescription] = useState('');
   const [hourGoal, setHourGoal] = useState('');
+  const [endDate, setEndDate] = useState(new Date()); // Default to today
+  const [showDatePicker, setShowDatePicker] = useState(false); // Controls date picker visibility
 
   // Fetch communities
   useEffect(() => {
@@ -34,7 +38,7 @@ const ManageCommunities = ({ navigation }) => {
   const handleCreateCommunity = async () => {
     const user = auth.currentUser;
     if (user) {
-      if (!communityName || !description || !hourGoal) {
+      if (!communityName || !description || !hourGoal || !endDate) {
         Alert.alert('Error', 'Please fill in all fields');
         return;
       }
@@ -52,6 +56,7 @@ const ManageCommunities = ({ navigation }) => {
           description,
           hourGoal: Number(hourGoal),
           createdBy: user.uid,
+          endDate: endDate.toISOString(), // Store as ISO string
         };
 
         // Add to Firestore
@@ -63,6 +68,7 @@ const ManageCommunities = ({ navigation }) => {
         setCommunityName('');
         setDescription('');
         setHourGoal('');
+        setEndDate(new Date());
 
         // Navigate to settings
         navigation.navigate('ManageCommunitySettings', { communityId: docRef.id });
@@ -80,70 +86,91 @@ const ManageCommunities = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Title */}
-      <Text style={styles.title}>Manage Communities</Text>
+    <PaperProvider>
+      <View style={styles.container}>
+        {/* Title */}
+        <Text style={styles.title}>Manage Communities</Text>
 
-      {/* Input fields */}
-      <TextInput
-        style={styles.input}
-        placeholder="Community Name"
-        placeholderTextColor="#888"
-        value={communityName}
-        onChangeText={setCommunityName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Community Description"
-        placeholderTextColor="#888"
-        value={description}
-        onChangeText={setDescription}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Hour Goal"
-        placeholderTextColor="#888"
-        keyboardType="numeric"
-        value={hourGoal}
-        onChangeText={setHourGoal}
-      />
+        {/* Input fields */}
+        <TextInput
+          style={styles.input}
+          placeholder="Community Name"
+          placeholderTextColor="#888"
+          value={communityName}
+          onChangeText={setCommunityName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Community Description"
+          placeholderTextColor="#888"
+          value={description}
+          onChangeText={setDescription}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Hour Goal"
+          placeholderTextColor="#888"
+          keyboardType="numeric"
+          value={hourGoal}
+          onChangeText={setHourGoal}
+        />
 
-      {/* Create Button */}
-      <TouchableOpacity
-        style={[styles.createButton, isLoading && styles.disabledButton]}
-        onPress={handleCreateCommunity}
-        disabled={isLoading}
-      >
-        {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createButtonText}>Create Community</Text>}
-      </TouchableOpacity>
+        {/* End Date Picker Button */}
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
+          <Text style={styles.datePickerText}>📅 Select Due Date: {endDate.toDateString()}</Text>
+        </TouchableOpacity>
 
-      {/* List of Communities */}
-      <FlatList
-        data={communities}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.communityBox}
-            onPress={() => handleCommunityClick(item.id)}
-          >
-            <View style={styles.communityHeader}>
-              <Text style={styles.communityName}>{item.communityName}</Text>
-              <MaterialIcons name="arrow-forward-ios" size={18} color="#bbb" />
-            </View>
-            <Text style={styles.communityDescription}>{item.description}</Text>
-            <Text style={styles.communityGoal}>🎯 Goal: {item.hourGoal} hours</Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={<Text style={styles.noCommunitiesText}>No communities found.</Text>}
-      />
-    </View>
+        {/* Date Picker Modal */}
+        <DatePickerModal
+          locale="en"
+          mode="single"
+          visible={showDatePicker}
+          onDismiss={() => setShowDatePicker(false)} // Close when dismissed
+          date={endDate}
+          onConfirm={(params) => {
+            setShowDatePicker(false);
+            setEndDate(params.date);
+          }}
+        />
+
+        {/* Create Button */}
+        <TouchableOpacity
+          style={[styles.createButton, isLoading && styles.disabledButton]}
+          onPress={handleCreateCommunity}
+          disabled={isLoading}
+        >
+          {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createButtonText}>Create Community</Text>}
+        </TouchableOpacity>
+
+        {/* List of Communities */}
+        <FlatList
+          data={communities}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.communityBox}
+              onPress={() => handleCommunityClick(item.id)}
+            >
+              <View style={styles.communityHeader}>
+                <Text style={styles.communityName}>{item.communityName}</Text>
+                <MaterialIcons name="arrow-forward-ios" size={18} color="#bbb" />
+              </View>
+              <Text style={styles.communityDescription}>{item.description}</Text>
+              <Text style={styles.communityGoal}>🎯 Goal: {item.hourGoal} hours</Text>
+              <Text style={styles.communityEndDate}>📅 Due: {new Date(item.endDate).toDateString()}</Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={<Text style={styles.noCommunitiesText}>No communities found.</Text>}
+        />
+      </View>
+    </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1C1C1C', // Dark background
+    backgroundColor: '#1C1C1C',
     padding: 20,
   },
   title: {
@@ -162,20 +189,23 @@ const styles = StyleSheet.create({
     borderColor: '#555',
     marginBottom: 10,
   },
+  datePickerButton: {
+    backgroundColor: '#444',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  datePickerText: {
+    color: '#FFF',
+    fontSize: 16,
+  },
   createButton: {
     backgroundColor: '#1f91d6',
     padding: 15,
     borderRadius: 8,
     marginBottom: 20,
     alignItems: 'center',
-  },
-  createButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  disabledButton: {
-    backgroundColor: '#555',
   },
   communityBox: {
     backgroundColor: '#2E2E2E',
@@ -185,31 +215,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#444',
   },
-  communityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  communityName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  communityDescription: {
+  communityEndDate: {
     fontSize: 14,
-    color: '#CCC',
-    marginBottom: 5,
-  },
-  communityGoal: {
-    fontSize: 14,
-    color: '#1f91d6',
+    color: '#FFA500',
     fontWeight: 'bold',
-  },
-  noCommunitiesText: {
-    fontSize: 16,
-    color: '#777',
-    textAlign: 'center',
-    marginTop: 20,
+    marginTop: 5,
   },
 });
 

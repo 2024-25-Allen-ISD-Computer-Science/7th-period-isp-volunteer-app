@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { firestore, auth } from './firebaseConfig';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection } from 'firebase/firestore';
 import * as Progress from 'react-native-progress';
 
 const CommunityProgressScreen = ({ navigation }) => {
@@ -22,6 +22,7 @@ const CommunityProgressScreen = ({ navigation }) => {
                 name: community.communityName,
                 hoursLogged: community.hoursLogged || 0,
                 hourGoal: communityDoc.data().hourGoal || 0,
+                endDate: communityDoc.data().endDate ? new Date(communityDoc.data().endDate).toDateString() : 'No due date set',
               });
             }
           }
@@ -50,15 +51,16 @@ const CommunityProgressScreen = ({ navigation }) => {
     return (
       <View style={styles.communityBox}>
         <Text style={styles.communityTitle}>{item.name}</Text>
-        <Text style={styles.communityDescription}>Goal: {item.hourGoal} hours</Text>
+        <Text style={styles.communityDescription}>🎯 Goal: {item.hourGoal} hours</Text>
+        <Text style={styles.communityDueDate}>📅 Due Date: {item.endDate}</Text>
         <Text style={styles.communityProgress}>
-          {item.hoursLogged} / {item.hourGoal} hours logged
+          ⏳ {item.hoursLogged} / {item.hourGoal} hours logged
         </Text>
         <Progress.Bar
           progress={progress}
           width={null}
           height={20}
-          color="#443939"
+          color="#1f91d6"
           borderWidth={0}
           style={styles.progressBar}
         />
@@ -114,6 +116,12 @@ const styles = StyleSheet.create({
   },
   communityDescription: {
     fontSize: 14,
+    marginBottom: 5,
+  },
+  communityDueDate: {
+    fontSize: 14,
+    color: '#FFA500',
+    fontWeight: 'bold',
     marginBottom: 5,
   },
   communityProgress: {

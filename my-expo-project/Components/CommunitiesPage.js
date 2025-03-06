@@ -78,7 +78,8 @@ const CommunityScreen = ({ navigation }) => {
       <View style={styles.communityBox}>
         <Text style={styles.communityTitle}>{item.communityName}</Text>
         <Text style={styles.communityDescription}>{item.description}</Text>
-        <Text style={styles.communityGoal}>Hour Goal: {item.hourGoal}</Text>
+        <Text style={styles.communityGoal}>🎯 Hour Goal: {item.hourGoal} hours</Text>
+        <Text style={styles.communityDueDate}>📅 Due Date: {item.endDate ? new Date(item.endDate).toDateString() : 'No due date set'}</Text>
         
         {isJoined ? (
           <TouchableOpacity 
@@ -164,6 +165,12 @@ const styles = StyleSheet.create({
   communityGoal: {
     fontSize: 14,
     color: '#FFF',
+    marginBottom: 5,
+  },
+  communityDueDate: {
+    fontSize: 14,
+    color: '#FFA500',
+    fontWeight: 'bold',
     marginBottom: 10,
   },
   joinButton: {
@@ -188,7 +195,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E2E2E',
     paddingVertical: 5,
     bottom: -35, //not here before (newly added this week)
-
   },
 });
 
