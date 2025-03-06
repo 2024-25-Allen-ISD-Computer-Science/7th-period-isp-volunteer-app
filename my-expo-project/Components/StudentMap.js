@@ -1,6 +1,6 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 import { MAP_API_KEY } from "@env";
 
 const containerStyle = {
@@ -8,22 +8,60 @@ const containerStyle = {
   height: "500px",
 };
 
+// Map center is downtown Dallas
 const center = {
-  lat: 32.7767, // Dallas, TX Latitude
-  lng: -96.7970, // Dallas, TX Longitude
+  lat: 32.7767, 
+  lng: -96.7970, 
 };
 
-const MapScreen = ({ navigation }) => {
+// List of marker locations
+const locations = [
+  {
+    id: 1,
+    name: "PB & Joy @ AHS",
+    position: { lat: 33.1081, lng: -96.6457 },
+  },
+  {
+    id: 2,
+    name: "Plano Lifeguard",
+    position: { lat: 33.0198, lng: -96.6997 },
+  },
+  {
+    id: 3,
+    name: "Frisco Library Volunteering",
+    position: { lat: 33.1507, lng: -96.8236 },
+  },
+];
+
+const StudentMap = ({ navigation }) => {
+  const [selectedMarker, setSelectedMarker] = useState(null);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Dallas, TX Map</Text>
-      
+
       <LoadScript googleMapsApiKey={MAP_API_KEY}>
-        <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={12} />
+        <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10}>
+          {locations.map((location) => (
+            <Marker
+              key={location.id}
+              position={location.position}
+              onClick={() => setSelectedMarker(location)}
+            />
+          ))}
+
+          {selectedMarker && (
+            <InfoWindow
+              position={selectedMarker.position}
+              onCloseClick={() => setSelectedMarker(null)}
+            >
+              <Text>{selectedMarker.name}</Text>
+            </InfoWindow>
+          )}
+        </GoogleMap>
       </LoadScript>
 
-      {/* Back Button to Home */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("Home")}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("StudentHomePage")}>
         <Text style={styles.backButtonText}>Back to Home</Text>
       </TouchableOpacity>
     </View>
@@ -57,4 +95,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapScreen;
+export default StudentMap;

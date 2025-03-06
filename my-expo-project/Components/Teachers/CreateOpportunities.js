@@ -5,6 +5,9 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { firestore, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { MAP_API_KEY } from "@env";
+
 
 const CreateOpportunities = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -16,6 +19,7 @@ const CreateOpportunities = ({ navigation }) => {
   const [maxSignUps, setMaxSignUps] = useState('');
   const [communities, setCommunities] = useState([]);
   const [selectedCommunity, setSelectedCommunity] = useState('');
+  const [location, setLocation] = useState(null);
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -42,7 +46,12 @@ const CreateOpportunities = ({ navigation }) => {
       Alert.alert('Error', 'Please select a community.');
       return;
     }
-
+  
+    if (!location) {
+      Alert.alert('Error', 'Please enter a location.');
+      return;
+    }
+  
     const user = auth.currentUser;
     if (user) {
       try {
@@ -55,9 +64,14 @@ const CreateOpportunities = ({ navigation }) => {
           maxSignUps: parseInt(maxSignUps, 10),
           currentSignUps: 0,
           communityId: selectedCommunity,
+          location: { //Adding location as a field to be stored in Firestore
+            address: location.address, // Save full address
+            latitude: location.lat,   // Save latitude
+            longitude: location.lng,  // Save longitude
+          },
           createdBy: user.uid,
         };
-
+  
         await addDoc(collection(firestore, 'opportunities'), opportunityData);
         Alert.alert('Success', 'Opportunity created successfully!');
         navigation.goBack();
@@ -67,6 +81,7 @@ const CreateOpportunities = ({ navigation }) => {
       }
     }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -128,6 +143,47 @@ const CreateOpportunities = ({ navigation }) => {
         value={maxSignUps}
         onChangeText={setMaxSignUps}
       />
+
+  {/* Google Places Autocomplete for Location (for opportunities)*/}
+<GooglePlacesAutocomplete
+  placeholder="Enter Location"
+  listViewDisplayed="auto"
+  onPress={(data, details = null) => {
+    if (!details) {
+      Alert.alert("Error", "Location details could not be retrieved. Try again.");
+      return;
+    }
+    setLocation({
+      address: data.description,
+      lat: details.geometry.location.lat,
+      lng: details.geometry.location.lng,
+    });
+  }}
+  query={{
+    key: MAP_API_KEY,
+    language: "en",
+  }}
+  fetchDetails={true}
+  styles={{
+    container: { marginBottom: 10, zIndex: 1000 }, 
+    textInput: styles.input,
+    listView: {
+      backgroundColor: "#fff",
+      zIndex: 1000, 
+    },
+  }}
+ 
+  requestUrl={{
+    url: "https://thingproxy.freeboard.io/fetch/https://maps.googleapis.com/maps/api",
+    useOnPlatform: "web",
+  }}
+/>
+
+
+
+
+
+
 
       <Text style={styles.label}>Assign to Community:</Text>
       <View style={styles.pickerContainer}>
