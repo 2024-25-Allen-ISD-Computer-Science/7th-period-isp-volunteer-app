@@ -13,7 +13,7 @@ exports.sendEmail = functions.https.onCall(async (data, context) => {
   const { to, subject, message } = data;
 
   const mailOptions = {
-    from: "helphiveend@gmail.com", // Replace with your email
+    from: "helphiveend@gmail.com",
     to,
     subject,
     text: message,

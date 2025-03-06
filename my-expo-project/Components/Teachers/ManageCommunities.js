@@ -125,7 +125,7 @@ const ManageCommunities = ({ navigation }) => {
           locale="en"
           mode="single"
           visible={showDatePicker}
-          onDismiss={() => setShowDatePicker(false)} // Close when dismissed
+          onDismiss={() => setShowDatePicker(false)} 
           date={endDate}
           onConfirm={(params) => {
             setShowDatePicker(false);

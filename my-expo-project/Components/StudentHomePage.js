@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, ScrollView } from 'react-native';
 import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { getAuth, signOut } from "firebase/auth";
@@ -26,7 +26,7 @@ const StudentHomePage = ({ navigation }) => {
 
     fetchUserData();
   }, []);
-  
+
   const handleSignOut = () => {
     const auth = getAuth();
     signOut(auth)
@@ -36,10 +36,10 @@ const StudentHomePage = ({ navigation }) => {
       .catch((error) => {
         console.error("Sign-out error:", error);
       });
-  };  
-  
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <TouchableOpacity
         style={styles.signOutButton}
         onPress={handleSignOut}
@@ -92,7 +92,7 @@ const StudentHomePage = ({ navigation }) => {
       >
         <Text style={styles.boxText}>ProgressBar</Text>
       </Pressable>
-      
+
       <Pressable
         style={[styles.box, hoveredButton === 'viewHours' && styles.hoveredBox]}
         onHoverIn={() => setHoveredButton('viewHours')}
@@ -110,7 +110,18 @@ const StudentHomePage = ({ navigation }) => {
       >
         <Text style={styles.boxText}>View Map</Text>
       </Pressable>
-    </View>
+
+      {/* New Button for Student Opportunities Calendar */}
+      <Pressable
+        style={[styles.box, hoveredButton === 'opportunitiesCalendar' && styles.hoveredBox]}
+        onHoverIn={() => setHoveredButton('opportunitiesCalendar')}
+        onHoverOut={() => setHoveredButton(null)}
+        onPress={() => navigation.navigate('StudentOpportunitiesCalendar')}
+      >
+        <Text style={styles.boxText}>View Opportunities Calendar</Text>
+      </Pressable>
+
+    </ScrollView>
   );
 };
 
@@ -119,8 +130,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1C1C1C',
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     color: '#FFFFFF',
