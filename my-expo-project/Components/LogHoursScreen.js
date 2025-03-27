@@ -49,7 +49,7 @@ const LogHoursScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
-
+  
     try {
       for (const community of selectedCommunities) {
         const newRequest = {
@@ -68,6 +68,15 @@ const LogHoursScreen = ({ navigation }) => {
         };
         await addDoc(collection(firestore, 'hourRequests'), newRequest);
       }
+  
+      // Call Firebase function to send email
+      const sendEmail = httpsCallable(functions, "sendEmail");
+      await sendEmail({
+        to: contactEmail,
+        subject: "Hour Submission Verification",
+        message: `Hello ${contactName},\n\n${auth.currentUser.displayName} has submitted volunteer hours for verification. Please review.`,
+      });
+  
       Alert.alert('Success', 'Your hours have been submitted for verification.');
       setActivityName('');
       setHours('');
@@ -80,6 +89,7 @@ const LogHoursScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to submit hours: ' + error.message);
     }
   };
+  
 
   return (
     <PaperProvider>
