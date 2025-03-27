@@ -112,8 +112,8 @@ const StudentHomePage = ({ navigation }) => {
       </Pressable>
 
       <Pressable
-        style={[styles.box, hoveredButton === 'opportunitiesCalendar' && styles.hoveredBox]}
-        onHoverIn={() => setHoveredButton('opportunitiesCalendar')}
+        style={[styles.box, hoveredButton === 'StudentOpportunitiesCalendar' && styles.hoveredBox]}
+        onHoverIn={() => setHoveredButton('StudentOpportunitiesCalendar')}
         onHoverOut={() => setHoveredButton(null)}
         onPress={() => navigation.navigate('StudentOpportunitiesCalendar')}
       >

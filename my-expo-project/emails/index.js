@@ -1,26 +1,22 @@
-const functions = require("firebase-functions");
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "helphiveend@gmail.com", // Replace with your email
-    pass: "tcwp xsmo eqvz htli", // Replace with your email password or use an environment variable for better security
-  },
-});
-
 exports.sendEmail = functions.https.onCall(async (data, context) => {
+  console.log("Received email request:", data); // Debugging line
   const { to, subject, message } = data;
+
+  if (!to) {
+    console.error("Error: No recipient defined.");
+    return { success: false, error: "No recipient defined." };
+  }
 
   const mailOptions = {
     from: "helphiveend@gmail.com",
-    to,
-    subject,
+    to: to,
+    subject: subject,
     text: message,
   };
 
   try {
     await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
     return { success: true };
   } catch (error) {
     console.error("Error sending email:", error);
