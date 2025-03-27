@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { firestore, auth } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { MAP_API_KEY } from "@env";
-
 
 const CreateOpportunities = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -46,12 +44,12 @@ const CreateOpportunities = ({ navigation }) => {
       Alert.alert('Error', 'Please select a community.');
       return;
     }
-  
+
     if (!location) {
       Alert.alert('Error', 'Please enter a location.');
       return;
     }
-  
+
     const user = auth.currentUser;
     if (user) {
       try {
@@ -64,14 +62,12 @@ const CreateOpportunities = ({ navigation }) => {
           maxSignUps: parseInt(maxSignUps, 10),
           currentSignUps: 0,
           communityId: selectedCommunity,
-          location: { //Adding location as a field to be stored in Firestore
-            address: location.address, // Save full address
-            latitude: location.lat,   // Save latitude
-            longitude: location.lng,  // Save longitude
+          location: {
+            address: location.address, // Just the address
           },
           createdBy: user.uid,
         };
-  
+
         await addDoc(collection(firestore, 'opportunities'), opportunityData);
         Alert.alert('Success', 'Opportunity created successfully!');
         navigation.goBack();
@@ -81,7 +77,6 @@ const CreateOpportunities = ({ navigation }) => {
       }
     }
   };
-  
 
   return (
     <View style={styles.container}>
@@ -144,46 +139,42 @@ const CreateOpportunities = ({ navigation }) => {
         onChangeText={setMaxSignUps}
       />
 
-  {/* Google Places Autocomplete for Location (for opportunities)*/}
-<GooglePlacesAutocomplete
-  placeholder="Enter Location"
-  listViewDisplayed="auto"
-  onPress={(data, details = null) => {
-    if (!details) {
-      Alert.alert("Error", "Location details could not be retrieved. Try again.");
-      return;
-    }
-    setLocation({
-      address: data.description,
-      lat: details.geometry.location.lat,
-      lng: details.geometry.location.lng,
-    });
-  }}
-  query={{
-    key: MAP_API_KEY,
-    language: "en",
-  }}
-  fetchDetails={true}
-  styles={{
-    container: { marginBottom: 10, zIndex: 1000 }, 
-    textInput: styles.input,
-    listView: {
-      backgroundColor: "#fff",
-      zIndex: 1000, 
-    },
-  }}
- 
-  requestUrl={{
-    url: "https://thingproxy.freeboard.io/fetch/https://maps.googleapis.com/maps/api",
-    useOnPlatform: "web",
-  }}
-/>
+      {/* Google Places Autocomplete (New Version) */}
+      <GooglePlacesAutocomplete
+        placeholder="Enter Location"
+        fetchDetails={false} //Don't need place details from Places API
+        listViewDisplayed="auto"
+        onPress={(data) => {
+          const selectedAddress = data.description;
+          setLocation({ address: selectedAddress }); //Setting location from dropdown
+        }}
+        onFail={(error) => {
+          console.log('Autocomplete failed:', error);
+        }}
+        query={{
+          key: 'NOTHINGHERE', //Dummy key is needed for proxy
+          language: 'en',
+        }}
+        styles={{
+          container: { marginBottom: 10, zIndex: 1000 },
+          textInput: styles.input,
+          listView: {
+            backgroundColor: '#fff',
+            zIndex: 2000,
+            position: 'absolute',
+            top: 60,
+            width: '100%',
+          },
+        }}
+        {...(Platform.OS === 'web' && {
+          requestUrl: {
+            url: 'http://localhost:3000/places', //Using a proxy to avoid CORS issue
+            useOnPlatform: 'web',
+          },
+        })}
+      />
 
-
-
-
-
-
+      
 
       <Text style={styles.label}>Assign to Community:</Text>
       <View style={styles.pickerContainer}>
@@ -279,6 +270,10 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  locationPreview: {
+    color: '#ccc',
+    marginBottom: 15,
   },
   bottomNav: {
     flexDirection: 'row',

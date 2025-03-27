@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { getAuth, signOut } from "firebase/auth";
@@ -39,7 +39,7 @@ const StudentHomePage = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <TouchableOpacity
         style={styles.signOutButton}
         onPress={handleSignOut}
@@ -111,7 +111,6 @@ const StudentHomePage = ({ navigation }) => {
         <Text style={styles.boxText}>View Map</Text>
       </Pressable>
 
-      {/* New Button for Student Opportunities Calendar */}
       <Pressable
         style={[styles.box, hoveredButton === 'opportunitiesCalendar' && styles.hoveredBox]}
         onHoverIn={() => setHoveredButton('opportunitiesCalendar')}
@@ -121,7 +120,7 @@ const StudentHomePage = ({ navigation }) => {
         <Text style={styles.boxText}>View Opportunities Calendar</Text>
       </Pressable>
 
-    </ScrollView>
+    </View>
   );
 };
 
@@ -129,7 +128,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1C1C1C',
-    padding: 20,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
   title: {
     color: '#FFFFFF',
@@ -150,11 +151,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 15,
     marginBottom: 15,
-    width: '90%',
+    width: '90%',         
     alignItems: 'center',
     justifyContent: 'center',
-    transitionProperty: 'background-color',
-    transitionDuration: '200ms',
   },
   hoveredBox: {
     backgroundColor: '#1f91d6',
