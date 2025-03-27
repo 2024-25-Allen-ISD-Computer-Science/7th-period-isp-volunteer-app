@@ -1,4 +1,7 @@
-const MAP_API_KEY = 'AIzaSyD2KhZTRrfMXNpJpvdFXA2f-g-feqEjvac';
+require('dotenv').config();
+
+
+const MAP_API_KEY = process.env.MAP_API_KEY;
 
 const express = require('express');
 const bodyParser = require('body-parser');
