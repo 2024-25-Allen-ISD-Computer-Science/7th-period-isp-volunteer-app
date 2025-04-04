@@ -1,9 +1,10 @@
+import * as AuthSession from 'expo-auth-session';
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, TextInput, TouchableOpacity, Image } from 'react-native';
 import { Text } from 'react-native-paper';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { getAuth, signInWithCredential, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { signInWithCredential, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from './firebaseConfig';
 
@@ -13,10 +14,14 @@ const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Google Auth Request setup
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "YOUR_GOOGLE_CLIENT_ID",
+    clientId: '677989373634-qs2pjr7u09pm8astpscq9nehr5s8sat2.apps.googleusercontent.com',
   });
+
+  useEffect(() => {
+    const uri = AuthSession.makeRedirectUri({ useProxy: true });
+    console.log("Redirect URI:", uri);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -35,21 +40,44 @@ const AuthScreen = ({ navigation }) => {
       }
     });
 
-    return () => unsubscribe(); // Cleanup listener
+    return () => unsubscribe();
   }, [navigation]);
 
   useEffect(() => {
-    if (response?.type === 'success') {
-      const { idToken, accessToken } = response.authentication;
-      const credential = GoogleAuthProvider.credential(idToken, accessToken);
+    const signInWithGoogle = async () => {
+      if (response?.type === 'success' && response.authentication) {
+        const { idToken, accessToken } = response.authentication;
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
 
-      signInWithCredential(auth, credential)
-        .then(() => {
-          console.log('Google Sign-In successful');
-          navigation.navigate('StudentHomePage');
-        })
-        .catch((error) => Alert.alert('Authentication Error', error.message));
-    }
+        try {
+          const result = await signInWithCredential(auth, credential);
+          const user = result.user;
+
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(userDocRef);
+
+          if (!docSnap.exists()) {
+            // First-time login — redirect to profile setup
+            navigation.navigate('ProfileSetup', {
+              uid: user.uid,
+              name: user.displayName,
+              email: user.email,
+              profilePicture: user.photoURL,
+            });
+          } else {
+            const userData = docSnap.data();
+            const accountType = userData.accountType;
+
+            navigation.navigate(accountType === 'teacher' ? 'TeacherHomePage' : 'StudentHomePage');
+          }
+        } catch (error) {
+          console.log('Google Sign-In Error:', error);
+          Alert.alert('Authentication Error', error.message);
+        }
+      }
+    };
+
+    signInWithGoogle();
   }, [response]);
 
   const handleGoogleSignIn = () => promptAsync();
@@ -106,11 +134,11 @@ const AuthScreen = ({ navigation }) => {
         />
 
         <TouchableOpacity 
-            style={styles.loginButton} 
-            onPress={handleSignIn}
-          >
-            <Text style={styles.loginButtonText}>Log In</Text>
-          </TouchableOpacity>
+          style={styles.loginButton} 
+          onPress={handleSignIn}
+        >
+          <Text style={styles.loginButtonText}>Log In</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity>
           <Text style={styles.linkText}>Forgot Password?</Text>

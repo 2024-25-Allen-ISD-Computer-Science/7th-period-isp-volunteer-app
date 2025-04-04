@@ -25,6 +25,7 @@ import ViewLoggedHoursScreen from './Components/ViewLoggedHoursScreen';
 import StudentMap from './Components/StudentMap';
 import StudentProfileScreen from './Components/Teachers/StudentProfileScreen';
 import StudentOpportunitiesCalendar from './Components/StudentOpportunitiesCalendar';
+import ProfileSetup from './Components/ProfileSetup';
 
 const theme = {
   ...DefaultTheme,
@@ -41,6 +42,7 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Main">
         <Stack.Screen options={{ headerShown: false }} name="Auth" component={AuthScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="ProfileSetup" component={ProfileSetup} />
         <Stack.Screen options={{ headerShown: false }} name="EmailSignUp" component={EmailSignUpScreen} />
         <Stack.Screen options={{ headerShown: false }} name="EmailSignIn" component={EmailSignInScreen} />
         <Stack.Screen options={{ headerShown: false }} name="StudentHomePage" component={StudentHomePage} />

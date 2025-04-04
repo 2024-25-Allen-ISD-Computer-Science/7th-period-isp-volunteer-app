@@ -1,3 +1,8 @@
+require('dotenv').config();
+
+
+const MAP_API_KEY = process.env.MAP_API_KEY;
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const SparkPost = require('sparkpost');
@@ -5,8 +10,13 @@ const SparkPost = require('sparkpost');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Initialize SparkPost with your API key
-const client = new SparkPost('YOUR_SPARKPOST_API_KEY'); // Replace with your actual API Key
+
+const cors = require('cors');
+app.use(cors());
+
+
+// Initialize SparkPost
+const client = new SparkPost('YOUR_SPARKPOST_API_KEY');
 
 app.use(bodyParser.json());
 
@@ -16,7 +26,7 @@ app.post('/send-verification', (req, res) => {
 
   const message = {
     content: {
-      from: 'your-email@example.com',  // Replace with your sender email
+      from: 'your-email@example.com', 
       subject: `${studentName} Requests Verification of Hours`,
       text: `Hello,\n\n${studentName} has logged ${hoursLogged} hours in the community "${communityName}" and requests your verification.\n\nPlease verify the hours by clicking the link below:\n${verificationLink}`,
       html: `<p>Hello,</p><p>${studentName} has logged <strong>${hoursLogged}</strong> hours in the community <em>"${communityName}"</em> and requests your verification.</p><p>Please verify the hours by clicking the link below:</p><p><a href="${verificationLink}">Verify Hours</a></p>`,
@@ -36,7 +46,32 @@ app.post('/send-verification', (req, res) => {
     });
 });
 
+const axios = require('axios');
+
+
+app.get('/places/place/autocomplete/json', async (req, res) => {
+
+  try {
+    const params = new URLSearchParams(req.query);
+    params.set('key', MAP_API_KEY);
+
+    const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`;
+    const response = await axios.get(url);
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Proxy error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Places proxy failed' });
+  }
+});
+
+
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+
+

@@ -15,7 +15,9 @@
       "FIREBASE_MEASUREMENT_ID": "G-7484DRXG0Y",
 
       "googleClientID": "677989373634-750v43qulrqqf4t9sr1sj5b8k315qcjc.apps.googleusercontent.com",
-      "redirectUri": "https://auth.expo.io/@anonymous/helphive"
+      "redirectUri": "https://auth.expo.io/@anonymous/helphive",
+
+      "expoClientId": "677989373634-qs2pjr7u09pm8astpscq9nehr5s8sat2.apps.googleusercontent.com"
     },
     "android": {
       "newArchEnabled": true
