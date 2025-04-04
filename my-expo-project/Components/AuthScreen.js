@@ -20,7 +20,7 @@ const AuthScreen = ({ navigation }) => {
 
   useEffect(() => {
     const uri = AuthSession.makeRedirectUri({ useProxy: true });
-    console.log("🔁 Redirect URI:", uri);
+    console.log("Redirect URI:", uri);
   }, []);
 
   useEffect(() => {

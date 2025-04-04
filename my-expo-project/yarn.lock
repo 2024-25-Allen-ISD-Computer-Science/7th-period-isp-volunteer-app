@@ -9727,12 +9727,12 @@ mkdirp@0.5.1:
   dependencies:
     minimist "0.0.8"
 
-moment@^2.29.4:
+moment@^2.29.4, moment@^2.30.1, moment@^2.7.0:
   version "2.30.1"
   resolved "https://registry.npmjs.org/moment/-/moment-2.30.1.tgz"
   integrity sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==
 
-moment@^2.7.0, moment@2.9.0:
+moment@2.9.0:
   version "2.9.0"
   resolved "https://registry.npmjs.org/moment/-/moment-2.9.0.tgz"
   integrity sha512-E3c3pw5ePAi6OuwYZhzNnoV/yyzWq76tjdTpgXCyv34CwDzl8WHcudOli/FkkKzAlv00k3+UETVVKV5x5Q2sQQ==
