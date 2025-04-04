@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { MaterialIcons } from '@expo/vector-icons';
 import { firestore, auth, functions } from './firebaseConfig';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -45,11 +45,18 @@ const LogHoursScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    if (selectedCommunities.length === 0 || !activityName || !hours || !minutes || !contactEmail || !contactName) {
+    if (
+      selectedCommunities.length === 0 ||
+      !activityName ||
+      !hours ||
+      !minutes ||
+      !contactEmail ||
+      !contactName
+    ) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
-  
+
     try {
       for (const community of selectedCommunities) {
         const newRequest = {
@@ -68,15 +75,14 @@ const LogHoursScreen = ({ navigation }) => {
         };
         await addDoc(collection(firestore, 'hourRequests'), newRequest);
       }
-  
-      // Call Firebase function to send email
-      const sendEmail = httpsCallable(functions, "sendEmail");
+
+      const sendEmail = httpsCallable(functions, 'sendEmail');
       await sendEmail({
         to: contactEmail,
-        subject: "Hour Submission Verification",
+        subject: 'Hour Submission Verification',
         message: `Hello ${contactName},\n\n${auth.currentUser.displayName} has submitted volunteer hours for verification. Please review.`,
       });
-  
+
       Alert.alert('Success', 'Your hours have been submitted for verification.');
       setActivityName('');
       setHours('');
@@ -89,35 +95,59 @@ const LogHoursScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to submit hours: ' + error.message);
     }
   };
-  
 
   return (
     <PaperProvider>
-      <View style={styles.container}>
-        <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
+      <SafeAreaView style={styles.safeArea} edges={['top']}> {/* Only apply safe area padding to the top (e.g. notch, status bar */}
+        <ScrollView contentContainerStyle={styles.container}>
+          <Text style={styles.title}>Log Hours & Submit Opportunity</Text>
 
-        <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.sectionTitle}>Select Communities</Text>
-          <FlatList
-            data={joinedCommunities}
-            keyExtractor={(item) => item.communityId}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.communityBox, selectedCommunities.some((c) => c.communityId === item.communityId) && styles.selectedBox]}
-                onPress={() => toggleCommunitySelection(item)}
-              >
-                <Text style={styles.communityTitle}>{item.communityName}</Text>
-              </TouchableOpacity>
+          <View style={styles.communityList}>
+            {joinedCommunities.length === 0 ? (
+              <Text style={styles.emptyText}>No communities found.</Text>
+            ) : (
+              joinedCommunities.map((item) => (
+                <TouchableOpacity
+                  key={item.communityId}
+                  style={[
+                    styles.communityBox,
+                    selectedCommunities.some((c) => c.communityId === item.communityId) && styles.selectedBox,
+                  ]}
+                  onPress={() => toggleCommunitySelection(item)}
+                >
+                  <Text style={styles.communityTitle}>{item.communityName}</Text>
+                </TouchableOpacity>
+              ))
             )}
-            ListEmptyComponent={<Text style={styles.emptyText}>No communities found.</Text>}
-          />
+          </View>
 
           <Text style={styles.sectionTitle}>Log Hours</Text>
           <View style={styles.timeContainer}>
-            <TextInput style={[styles.input, styles.timeInput]} placeholder="Hours" keyboardType="numeric" value={hours} onChangeText={setHours} />
-            <TextInput style={[styles.input, styles.timeInput]} placeholder="Minutes" keyboardType="numeric" value={minutes} onChangeText={setMinutes} />
+            <TextInput
+              style={[styles.input, styles.timeInput]}
+              placeholder="Hours"
+              keyboardType="numeric"
+              value={hours}
+              onChangeText={setHours}
+              placeholderTextColor="#888"
+            />
+            <TextInput
+              style={[styles.input, styles.timeInput]}
+              placeholder="Minutes"
+              keyboardType="numeric"
+              value={minutes}
+              onChangeText={setMinutes}
+              placeholderTextColor="#888"
+            />
           </View>
-          <TextInput style={styles.input} placeholder="Activity Name" value={activityName} onChangeText={setActivityName} />
+          <TextInput
+            style={styles.input}
+            placeholder="Activity Name"
+            value={activityName}
+            onChangeText={setActivityName}
+            placeholderTextColor="#888"
+          />
           <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
             <Text style={styles.datePickerText}>{date.toDateString()}</Text>
           </TouchableOpacity>
@@ -132,28 +162,115 @@ const LogHoursScreen = ({ navigation }) => {
               setDate(params.date);
             }}
           />
-          <TextInput style={styles.input} placeholder="Contact Email" value={contactEmail} onChangeText={setContactEmail} />
-          <TextInput style={styles.input} placeholder="Contact Name" value={contactName} onChangeText={setContactName} />
-          <TextInput style={styles.input} placeholder="Description" multiline value={description} onChangeText={setDescription} />
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Email"
+            value={contactEmail}
+            onChangeText={setContactEmail}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Contact Name"
+            value={contactName}
+            onChangeText={setContactName}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Description"
+            multiline
+            value={description}
+            onChangeText={setDescription}
+            placeholderTextColor="#888"
+          />
           <TouchableOpacity style={styles.logButton} onPress={handleSubmit}>
             <Text style={styles.logButtonText}>Submit</Text>
           </TouchableOpacity>
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </PaperProvider>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1C1C1C', padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#FFF', textAlign: 'center', marginBottom: 15 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFF', marginBottom: 10 },
-  communityBox: { backgroundColor: '#2E2E2E', padding: 15, borderRadius: 10, marginBottom: 10 },
-  selectedBox: { borderColor: '#1f91d6', borderWidth: 2 },
-  communityTitle: { color: '#FFF', fontSize: 16 },
-  input: { backgroundColor: '#000', color: '#FFF', padding: 10, borderRadius: 5, marginBottom: 10 },
-  logButton: { backgroundColor: '#1f91d6', padding: 15, borderRadius: 5, alignItems: 'center' },
-  logButtonText: { color: '#FFF', fontSize: 16 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#1C1C1C',
+  },
+  container: {
+    padding: 20,
+    paddingBottom: 60,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 10,
+  },
+  communityList: {
+    marginBottom: 20,
+  },
+  communityBox: {
+    backgroundColor: '#2E2E2E',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  selectedBox: {
+    borderColor: '#1f91d6',
+    borderWidth: 2,
+  },
+  communityTitle: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  emptyText: {
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  input: {
+    backgroundColor: '#000',
+    color: '#FFF',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  timeInput: {
+    flex: 1,
+  },
+  datePickerButton: {
+    backgroundColor: '#2E2E2E',
+    padding: 12,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  datePickerText: {
+    color: '#FFF',
+  },
+  logButton: {
+    backgroundColor: '#1f91d6',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  logButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+  },
 });
 
 export default LogHoursScreen;
