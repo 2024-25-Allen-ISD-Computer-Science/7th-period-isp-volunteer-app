@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { auth, firestore } from '../firebaseConfig';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Provider as PaperProvider } from 'react-native-paper';
 
@@ -23,6 +23,7 @@ const ManageCommunities = ({ navigation }) => {
   const [hourGoal, setHourGoal] = useState('');
   const [endDate, setEndDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [expandedCommunityId, setExpandedCommunityId] = useState(null);
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -81,8 +82,16 @@ const ManageCommunities = ({ navigation }) => {
     }
   };
 
-  const handleCommunityClick = (communityId) => {
-    navigation.navigate('ManageCommunitySettings', { communityId });
+  const handleRemoveCommunity = async (communityId) => {
+    try {
+      await deleteDoc(doc(firestore, 'communities', communityId));
+      setCommunities(prev => prev.filter(comm => comm.id !== communityId));
+      setExpandedCommunityId(null);
+      Alert.alert('Success', 'Community removed.');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to remove community.');
+    }
   };
 
   return (
@@ -150,13 +159,24 @@ const ManageCommunities = ({ navigation }) => {
           data={communities}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.communityBox}
-              onPress={() => handleCommunityClick(item.id)}
-            >
+            <View style={styles.communityBox}>
               <View style={styles.communityHeader}>
                 <Text style={styles.communityName}>{item.communityName}</Text>
-                <MaterialIcons name="arrow-forward-ios" size={18} color="#bbb" />
+                <TouchableOpacity onPress={() =>
+                  setExpandedCommunityId(
+                    expandedCommunityId === item.id ? null : item.id
+                  )
+                }>
+                  <MaterialIcons
+                    name={
+                      expandedCommunityId === item.id
+                        ? 'keyboard-arrow-down'
+                        : 'keyboard-arrow-right'
+                    }
+                    size={24}
+                    color="#bbb"
+                  />
+                </TouchableOpacity>
               </View>
               <Text style={styles.communityDescription}>{item.description}</Text>
               <Text style={styles.communityGoal}>
@@ -165,7 +185,16 @@ const ManageCommunities = ({ navigation }) => {
               <Text style={styles.communityEndDate}>
                 📅 Due: {new Date(item.endDate).toDateString()}
               </Text>
-            </TouchableOpacity>
+
+              {expandedCommunityId === item.id && (
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleRemoveCommunity(item.id)}
+                >
+                  <Text style={styles.removeButtonText}>Remove</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           )}
           ListEmptyComponent={
             <Text style={styles.noCommunitiesText}>No communities found.</Text>
@@ -272,6 +301,17 @@ const styles = StyleSheet.create({
     color: '#FFA500',
     fontWeight: 'bold',
     marginTop: 5,
+  },
+  removeButton: {
+    backgroundColor: '#f44336',
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  removeButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
   },
   noCommunitiesText: {
     color: '#AAA',

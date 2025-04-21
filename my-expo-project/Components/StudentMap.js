@@ -146,10 +146,7 @@ const StudentMap = ({ navigation }) => {
               <View style={{ maxWidth: 200 }}>
                 <Text
                   style={{
-                    fontWeight: "bold",
-                    fontSize: 15,
-                    lineHeight: 15,
-                    marginBottom: 10,
+                    fontWeight: "bold", fontSize: 15, lineHeight: 15, marginBottom: 10,
                   }}
                 >
                   {selectedMarker.name}

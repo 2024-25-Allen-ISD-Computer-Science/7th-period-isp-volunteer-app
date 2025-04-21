@@ -25,6 +25,11 @@ const StudentHomePage = ({ navigation }) => {
   const isMobile = width < 768;
 
   useEffect(() => {
+    const { width } = Dimensions.get('window');
+    if (width < 768) {
+      navigation.replace('MobileStudent');
+      return;
+    }
     (async () => {
       const user = auth.currentUser;
       if (user) {
@@ -98,7 +103,7 @@ const StudentHomePage = ({ navigation }) => {
                   </Pressable>
                 ))}
 
-                {/* Log Hours: wrap both button & dropdown in one Pressable */}
+              
                 <View
                   style={styles.navItemContainer}
                   onMouseEnter={() => setShowLogHoursDropdown(true)}

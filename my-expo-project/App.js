@@ -26,6 +26,7 @@ import StudentMap from './Components/StudentMap';
 import StudentProfileScreen from './Components/Teachers/StudentProfileScreen';
 import StudentOpportunitiesCalendar from './Components/StudentOpportunitiesCalendar';
 import ProfileSetup from './Components/ProfileSetup';
+import MobileStudentHomePage from './Components/MobileStudentHomePage';
 
 const theme = {
   ...DefaultTheme,
@@ -51,16 +52,18 @@ const App = () => {
         <Stack.Screen options={{ headerShown: false }} name="LogHours" component={LogHoursScreen} />
         <Stack.Screen options={{ headerShown: false }} name="TeacherHomePage" component={TeacherHomePage} />
         <Stack.Screen options={{ headerShown: false }} name="Opportunities" component={OpportunityScreen} />
-        <Stack.Screen options={{ HeaderShown: false }} name="Progress" component={CommunityProgressScreen} />
-        <Stack.Screen options={{ HeaderShown: false }} name="ManageCommunities" component={ManageCommunities} />
-        <Stack.Screen options={{ HeaderShown: false }} name="CreateOpportunities" component={CreateOpportunities} />
-        <Stack.Screen options={{ HeaderShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
-        <Stack.Screen options={{ HeaderShown: false }} name="VerifyHours" component={VerifyHoursPage} />
-        <Stack.Screen options={{ HeaderShown: false }} name="ManageOpportunities" component={ManageOpportunitiesScreen} />
-        <Stack.Screen options={{ HeaderShown: false }} name="ViewLoggedHours" component={ViewLoggedHoursScreen} />
-        <Stack.Screen options={{ HeaderShown: false }} name="StudentProfileScreen" component={StudentProfileScreen} />
-        <Stack.Screen options={{ HeaderShown: false }} name="StudentMap" component={StudentMap} />
-        <Stack.Screen options={{ HeaderShown: false }} name="StudentOpportunitiesCalendar" component={StudentOpportunitiesCalendar} />
+        <Stack.Screen options={{ headerShown: false }} name="Progress" component={CommunityProgressScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="ManageCommunities" component={ManageCommunities} />
+        <Stack.Screen options={{ headerShown: false }} name="CreateOpportunities" component={CreateOpportunities} />
+        <Stack.Screen options={{ headerShown: false }} name="TeacherManagePage" component={TeacherManagePage} />
+        <Stack.Screen options={{ headerShown: false }} name="VerifyHours" component={VerifyHoursPage} />
+        <Stack.Screen options={{ headerShown: false }} name="ManageOpportunities" component={ManageOpportunitiesScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="ViewLoggedHours" component={ViewLoggedHoursScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="StudentProfileScreen" component={StudentProfileScreen} />
+        <Stack.Screen options={{ headerShown: false }} name="StudentMap" component={StudentMap} />
+        <Stack.Screen options={{ headerShown: false }} name="StudentOpportunitiesCalendar" component={StudentOpportunitiesCalendar} />
+        <Stack.Screen options={{ headerShown: false }} name="MobileStudent" component={MobileStudentHomePage} />
+
       </Stack.Navigator>
     </NavigationContainer>
     </PaperProvider>
