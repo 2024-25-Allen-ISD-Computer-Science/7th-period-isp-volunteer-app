@@ -236,7 +236,7 @@ const ManageOpportunitiesScreen = ({ navigation }) => {
       </ScrollView>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+        <TouchableOpacity onPress={() => navigation.navigate('TeacherHomePage')}>
           <MaterialIcons name="home" size={30} color="white" />
         </TouchableOpacity>
         <TouchableOpacity>
