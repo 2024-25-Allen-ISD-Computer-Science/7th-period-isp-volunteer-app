@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1C1C1C',
     paddingTop: 40,
-    paddingBottom: 0,
+    paddingBottom: 100,
   },
   header: {
     paddingVertical: 10,
@@ -346,10 +346,15 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#2E2E2E',
-    paddingVertical: 35, //this was at 10 before
+    paddingVertical: 10,
+    zIndex: 100,
   },
 });
 

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 
-const StudentProfileScreen = ({ route }) => {
+const StudentProfileScreen = ({ route, navigation }) => {
   const { studentId } = route.params;
   const [student, setStudent] = useState(null);
 
@@ -42,6 +42,12 @@ const StudentProfileScreen = ({ route }) => {
       <Text style={styles.info}><Text style={styles.label}>Email:</Text> {student.email}</Text>
       <Text style={styles.info}><Text style={styles.label}>Date of Birth:</Text> {student.dob}</Text>
       <Text style={styles.info}><Text style={styles.label}>Phone Number:</Text> {student.phoneNumber}</Text>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("TeacherManagePage")}
+      >
+        <Text style={styles.backButtonText}>Back to Manage Page</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -73,6 +79,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#CCCCCC',
     textAlign: 'center',
+  },
+  backButton: {
+    backgroundColor: "#1f91d6",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  backButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

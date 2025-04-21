@@ -33,6 +33,7 @@
     "expo-dotenv": "^0.1.0",
     "expo-font": "~13.0.3",
     "expo-image-picker": "~16.0.4",
+    "expo-linear-gradient": "^14.0.2",
     "expo-module-scripts": "^3.5.2",
     "expo-random": "~14.0.1",
     "expo-status-bar": "~2.0.1",

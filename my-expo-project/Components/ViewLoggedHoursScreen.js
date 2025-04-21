@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1C1C1C',
     padding: 20,
+    paddingBottom: 80,
   },
   title: {
     fontSize: 24,
@@ -118,10 +119,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#2E2E2E',
     paddingVertical: 10,
+    zIndex: 100,
   },
 });
 

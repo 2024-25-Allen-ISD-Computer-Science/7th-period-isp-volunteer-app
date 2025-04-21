@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1C1C1C',
     paddingTop: 50,
     paddingHorizontal: 20,
-    paddingBottom: 70,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 26,
@@ -190,11 +190,15 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#2E2E2E',
-    paddingVertical: 5,
-    bottom: -35, //not here before (newly added this week)
+    paddingVertical: 10,
+    zIndex: 100,
   },
 });
 

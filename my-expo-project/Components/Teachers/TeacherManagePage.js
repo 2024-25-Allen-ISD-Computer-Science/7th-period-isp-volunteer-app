@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const TeacherManagePage = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
@@ -96,50 +97,67 @@ const TeacherManagePage = ({ navigation }) => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.communityContainer}>
-  <Text style={styles.communityName}>{item.communityName}</Text>
-
-  <FlatList
-    data={students[item.id] || []}
-    keyExtractor={(student) => student.id}
-    renderItem={({ item: student }) => (
-      <View style={styles.studentContainer}>
-                <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
-                {/* Ensure buttons are aligned in columns */}
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[styles.button, styles.profileButton]}
-                    onPress={() => navigation.navigate('StudentProfileScreen', { studentId: student.id })}
-                  >
-                    <Text style={styles.buttonText}>View Profile</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.button, styles.verifyButton]}
-                    onPress={() => navigation.navigate('VerifyHours', { studentId: student.id })}
-                  >
-                    <Text style={styles.buttonText}>Verify Hours</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.button, styles.removeButton]}
-                    onPress={() => handleRemoveStudent(item.id, student.id)}
-                  >
-                    <Text style={styles.buttonText}>Remove</Text>
-                  </TouchableOpacity>
+            <Text style={styles.communityName}>{item.communityName}</Text>
+            <FlatList
+              data={students[item.id] || []}
+              keyExtractor={(student) => student.id}
+              renderItem={({ item: student }) => (
+                <View style={styles.studentContainer}>
+                  <Text style={styles.studentName}>{student.firstName} {student.lastName}</Text>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={[styles.button, styles.profileButton]}
+                      onPress={() => navigation.navigate('StudentProfileScreen', { studentId: student.id })}
+                    >
+                      <Text style={styles.buttonText}>View Profile</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.verifyButton]}
+                      onPress={() => navigation.navigate('VerifyHours', { studentId: student.id })}
+                    >
+                      <Text style={styles.buttonText}>Verify Hours</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.removeButton]}
+                      onPress={() => handleRemoveStudent(item.id, student.id)}
+                    >
+                      <Text style={styles.buttonText}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            )}
-            ListEmptyComponent={<Text style={styles.emptyMessage}>No students found in this community.</Text>}
-          />
-        </View>
+              )}
+              ListEmptyComponent={<Text style={styles.emptyMessage}>No students found in this community.</Text>}
+            />
+          </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyMessage}>No communities found.</Text>}
       />
+
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('TeacherHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1C1C1C',
+    padding: 15,
+    paddingBottom: 80,
+  },
   communityContainer: {
     padding: 15,
     backgroundColor: '#2E2E2E',
@@ -165,15 +183,15 @@ const styles = StyleSheet.create({
   studentName: {
     fontSize: 16,
     color: '#FFF',
-    flex: 1, // Names take only necessary space
+    flex: 1,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: 300, // Proper alignment across all students
+    width: 300,
   },
   button: {
-    width: 100, // Equal width for all buttons
+    width: 100,
     paddingVertical: 10,
     borderRadius: 5,
     alignItems: 'center',
@@ -191,6 +209,21 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFF',
     fontWeight: 'bold',
+  },
+  emptyMessage: {
+    textAlign: 'center',
+    color: '#888',
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 12,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
 });
 

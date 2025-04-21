@@ -5,7 +5,7 @@ import { firestore, auth } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import moment from 'moment';
 
-const StudentOpportunitiesCalendar = () => {
+const StudentOpportunitiesCalendar = ({ navigation }) => {
   const [markedDates, setMarkedDates] = useState({});
   const [opportunityDetails, setOpportunityDetails] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
@@ -139,6 +139,12 @@ const StudentOpportunitiesCalendar = () => {
           </View>
         </Modal>
       )}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate("StudentHomePage")}
+      >
+        <Text style={styles.backButtonText}>Back to Home</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -214,6 +220,18 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  backButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  backButton: {
+    backgroundColor: "#1f91d6",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: "center",
   },
 });
 
