@@ -1,86 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput, ActivityIndicator } from 'react-native';
-import { DatePickerModal } from 'react-native-paper-dates'; // Use the working date picker
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
+import { DatePickerModal } from 'react-native-paper-dates';
 import { auth, firestore } from '../firebaseConfig';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Provider as PaperProvider } from 'react-native-paper'; // Required for DatePickerModal
+import { Provider as PaperProvider } from 'react-native-paper';
 
 const ManageCommunities = ({ navigation }) => {
   const [communities, setCommunities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Input fields for new community
   const [communityName, setCommunityName] = useState('');
   const [description, setDescription] = useState('');
   const [hourGoal, setHourGoal] = useState('');
-  const [endDate, setEndDate] = useState(new Date()); // Default to today
-  const [showDatePicker, setShowDatePicker] = useState(false); // Controls date picker visibility
+  const [endDate, setEndDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch communities
   useEffect(() => {
     const fetchCommunities = async () => {
       const communitiesRef = collection(firestore, 'communities');
       const querySnapshot = await getDocs(communitiesRef);
-
-      const communitiesList = [];
-      querySnapshot.forEach((doc) => {
-        communitiesList.push({ id: doc.id, ...doc.data() });
-      });
-
+      const communitiesList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setCommunities(communitiesList);
     };
 
     fetchCommunities();
   }, []);
 
-  // Create a new community
   const handleCreateCommunity = async () => {
     const user = auth.currentUser;
-    if (user) {
-      if (!communityName || !description || !hourGoal || !endDate) {
-        Alert.alert('Error', 'Please fill in all fields');
-        return;
-      }
-      if (isNaN(hourGoal) || Number(hourGoal) <= 0) {
-        Alert.alert('Error', 'Please enter a valid hour goal');
-        return;
-      }
 
-      try {
-        setIsLoading(true);
+    if (!user) return;
 
-        // New community data
-        const newCommunity = {
-          communityName,
-          description,
-          hourGoal: Number(hourGoal),
-          createdBy: user.uid,
-          endDate: endDate.toISOString(), // Store as ISO string
-        };
+    if (!communityName || !description || !hourGoal || !endDate) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
 
-        // Add to Firestore
-        const docRef = await addDoc(collection(firestore, 'communities'), newCommunity);
-        Alert.alert('Success', 'Community created successfully!');
-        setIsLoading(false);
+    if (isNaN(hourGoal) || Number(hourGoal) <= 0) {
+      Alert.alert('Error', 'Please enter a valid hour goal');
+      return;
+    }
 
-        // Clear input fields
-        setCommunityName('');
-        setDescription('');
-        setHourGoal('');
-        setEndDate(new Date());
+    try {
+      setIsLoading(true);
 
-        // Navigate to settings
-        navigation.navigate('ManageCommunitySettings', { communityId: docRef.id });
-      } catch (error) {
-        setIsLoading(false);
-        Alert.alert('Error', 'Failed to create community.');
-        console.error(error);
-      }
+      const newCommunity = {
+        communityName,
+        description,
+        hourGoal: Number(hourGoal),
+        createdBy: user.uid,
+        endDate: endDate.toISOString(),
+      };
+
+      const docRef = await addDoc(collection(firestore, 'communities'), newCommunity);
+
+      Alert.alert('Success', 'Community created successfully!');
+      setCommunityName('');
+      setDescription('');
+      setHourGoal('');
+      setEndDate(new Date());
+      setIsLoading(false);
+
+      navigation.navigate('ManageCommunitySettings', { communityId: docRef.id });
+    } catch (error) {
+      setIsLoading(false);
+      Alert.alert('Error', 'Failed to create community.');
+      console.error(error);
     }
   };
 
-  // Navigate to community settings
   const handleCommunityClick = (communityId) => {
     navigation.navigate('ManageCommunitySettings', { communityId });
   };
@@ -88,10 +88,8 @@ const ManageCommunities = ({ navigation }) => {
   return (
     <PaperProvider>
       <View style={styles.container}>
-        {/* Title */}
         <Text style={styles.title}>Manage Communities</Text>
 
-        {/* Input fields */}
         <TextInput
           style={styles.input}
           placeholder="Community Name"
@@ -115,17 +113,20 @@ const ManageCommunities = ({ navigation }) => {
           onChangeText={setHourGoal}
         />
 
-        {/* End Date Picker Button */}
-        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.datePickerButton}>
-          <Text style={styles.datePickerText}>📅 Select Due Date: {endDate.toDateString()}</Text>
+        <TouchableOpacity
+          onPress={() => setShowDatePicker(true)}
+          style={styles.datePickerButton}
+        >
+          <Text style={styles.datePickerText}>
+            📅 Select Due Date: {endDate.toDateString()}
+          </Text>
         </TouchableOpacity>
 
-        {/* Date Picker Modal */}
         <DatePickerModal
           locale="en"
           mode="single"
           visible={showDatePicker}
-          onDismiss={() => setShowDatePicker(false)} 
+          onDismiss={() => setShowDatePicker(false)}
           date={endDate}
           onConfirm={(params) => {
             setShowDatePicker(false);
@@ -133,16 +134,18 @@ const ManageCommunities = ({ navigation }) => {
           }}
         />
 
-        {/* Create Button */}
         <TouchableOpacity
           style={[styles.createButton, isLoading && styles.disabledButton]}
           onPress={handleCreateCommunity}
           disabled={isLoading}
         >
-          {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.createButtonText}>Create Community</Text>}
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.createButtonText}>Create Community</Text>
+          )}
         </TouchableOpacity>
 
-        {/* List of Communities */}
         <FlatList
           data={communities}
           keyExtractor={(item) => item.id}
@@ -156,12 +159,33 @@ const ManageCommunities = ({ navigation }) => {
                 <MaterialIcons name="arrow-forward-ios" size={18} color="#bbb" />
               </View>
               <Text style={styles.communityDescription}>{item.description}</Text>
-              <Text style={styles.communityGoal}>🎯 Goal: {item.hourGoal} hours</Text>
-              <Text style={styles.communityEndDate}>📅 Due: {new Date(item.endDate).toDateString()}</Text>
+              <Text style={styles.communityGoal}>
+                🎯 Goal: {item.hourGoal} hours
+              </Text>
+              <Text style={styles.communityEndDate}>
+                📅 Due: {new Date(item.endDate).toDateString()}
+              </Text>
             </TouchableOpacity>
           )}
-          ListEmptyComponent={<Text style={styles.noCommunitiesText}>No communities found.</Text>}
+          ListEmptyComponent={
+            <Text style={styles.noCommunitiesText}>No communities found.</Text>
+          }
         />
+
+        <View style={styles.bottomNav}>
+          <TouchableOpacity onPress={() => navigation.navigate('TeacherHomePage')}>
+            <MaterialIcons name="home" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <MaterialIcons name="search" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <MaterialIcons name="favorite" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+            <MaterialIcons name="person" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
     </PaperProvider>
   );
@@ -172,6 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1C1C1C',
     padding: 20,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 24,
@@ -207,6 +232,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
+  createButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
   communityBox: {
     backgroundColor: '#2E2E2E',
     padding: 15,
@@ -215,11 +248,45 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#444',
   },
+  communityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  communityName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  communityDescription: {
+    color: '#CCC',
+    marginTop: 4,
+  },
+  communityGoal: {
+    color: '#1f91d6',
+    marginTop: 6,
+    fontWeight: '600',
+  },
   communityEndDate: {
     fontSize: 14,
     color: '#FFA500',
     fontWeight: 'bold',
     marginTop: 5,
+  },
+  noCommunitiesText: {
+    color: '#AAA',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 20,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 12,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
 });
 

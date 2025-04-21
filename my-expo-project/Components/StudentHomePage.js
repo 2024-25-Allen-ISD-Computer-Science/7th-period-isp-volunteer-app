@@ -1,234 +1,291 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Pressable, Image, Modal, Dimensions } from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Dimensions,
+  Platform,
+  StatusBar,
+  Pressable,
+} from 'react-native';
 import { Video } from 'expo-av';
 import { auth, firestore } from './firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
-import { getAuth, signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import logo from '../assets/logo.png';
-import { Platform, StatusBar } from 'react-native';
-
 
 const StudentHomePage = ({ navigation }) => {
   const [userName, setUserName] = useState('');
-  const [hoveredButton, setHoveredButton] = useState(null);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [activeButton, setActiveButton] = useState('Home');
+  const [showLogHoursDropdown, setShowLogHoursDropdown] = useState(false);
   const videoRef = useRef(null);
+  const { width } = Dimensions.get('window');
+  const isMobile = width < 768;
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    (async () => {
       const user = auth.currentUser;
       if (user) {
-        const userDocRef = doc(firestore, 'users', user.uid);
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserName(`${data.firstName}`);
-        } else {
-          setUserName('Guest');
-        }
+        const userDoc = doc(firestore, 'users', user.uid);
+        const snap = await getDoc(userDoc);
+        setUserName(snap.exists() ? snap.data().firstName : 'Student');
       }
-    };
-    fetchUserData();
+    })();
   }, []);
 
   const handleSignOut = () => {
     signOut(auth)
       .then(() => navigation.navigate('Auth'))
-      .catch((error) => console.error('Sign-out error:', error));
+      .catch(console.error);
   };
 
+  const navItems = [
+    { id: 'Home', label: 'Home', route: 'Home' },
+    { id: 'Profile', label: 'Profile', route: 'ProfileScreen' },
+    { id: 'Opportunities', label: 'Opportunities', route: 'Opportunities' },
+    { id: 'Communities', label: 'Communities', route: 'Communities' },
+    { id: 'ViewMap', label: 'View Map', route: 'StudentMap' },
+    { id: 'Calendar', label: 'Calendar', route: 'StudentOpportunitiesCalendar' },
+  ];
+
   return (
-    <View style={styles.container}> {/* Main container for the screen */}
-    {/* Fullscreen background video */}
-      <Video 
-        ref={videoRef}
-        source={require('../public/background.mp4')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-        isMuted
-        shouldPlay
-        isLooping
-      />
-      {/* Dark overlay to improve text readability on top of video */}
-      <View style={styles.overlay} />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" translucent />
+      <View style={styles.container}>
 
-      {/* Top navbar */}
-      <View style={styles.navbar}>   
-        {/* Open menu on press */}
-        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuIcon}>
-          <Text style={styles.menuText}>☰</Text>
-        </TouchableOpacity>
-        <Image source={logo} style={styles.logoImage} /> {/* HelpHive logo */}
-        <View style={{ width: 30 }} />
-      </View>
+        {/* Background video & overlay */}
+        <Video
+          ref={videoRef}
+          source={require('../public/background.mp4')}
+          style={StyleSheet.absoluteFillObject}
+          resizeMode="cover"
+          isMuted
+          shouldPlay
+          isLooping
+        />
+        <View style={styles.overlay} />
 
-      {/* Modal that appears when the menu is open */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={menuVisible}
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); navigation.navigate('ProfileScreen'); }}>
-              {/* One of the options on the pop-up */}
-              <Text style={styles.navItem}>Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); navigation.navigate('Opportunities'); }}>
-              <Text style={styles.navItem}>Opportunities</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); navigation.navigate('LogHours'); }}>
-              <Text style={styles.navItem}>Log Hours</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); navigation.navigate('Communities'); }}>
-              <Text style={styles.navItem}>Communities</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); handleSignOut(); }}>
-              <Text style={styles.navItem}>Sign Out</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setMenuVisible(false)} style={styles.closeButton}>
-              <Text style={styles.closeText}>Close Menu</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Navbar */}
+        <View style={styles.header}>
+          <Image source={logo} style={styles.logoImage} />
+
+          {!isMobile && (
+            <View style={styles.navWrapper}>
+              <View style={styles.navContainer}>
+                {navItems.map(item => (
+                  <Pressable
+                    key={item.id}
+                    style={[
+                      styles.navButton,
+                      activeButton === item.id && styles.activeNavButton,
+                    ]}
+                    onPress={() => {
+                      setActiveButton(item.id);
+                      navigation.navigate(item.route);
+                      setShowLogHoursDropdown(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.navButtonText,
+                        activeButton === item.id && styles.activeNavText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                ))}
+
+                {/* Log Hours: wrap both button & dropdown in one Pressable */}
+                <View
+                  style={styles.navItemContainer}
+                  onMouseEnter={() => setShowLogHoursDropdown(true)}
+                  onMouseLeave={() => setShowLogHoursDropdown(false)}
+                >
+                  <Pressable
+                    onPress={() => {
+                      setActiveButton('LogHours');
+                      setShowLogHoursDropdown(prev => !prev);
+                    }}
+                  >
+                    <View style={[styles.navButton, showLogHoursDropdown && styles.activeNavButton]}>
+                      <Text style={[styles.navButtonText, showLogHoursDropdown && styles.activeNavText]}>
+                        Log Hours
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {showLogHoursDropdown && (
+                    <View style={styles.dropdownMenu}>
+                      <Pressable
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          navigation.navigate('LogHours');
+                          setTimeout(() => setShowLogHoursDropdown(false), 100);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>Log Hours</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          navigation.navigate('ViewLoggedHours');
+                          setTimeout(() => setShowLogHoursDropdown(false), 100);
+                        }}
+                      >
+                        <Text style={styles.dropdownItemText}>View Logged Hours</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              <Pressable style={styles.signOutButton} onPress={handleSignOut}>
+                <Text style={styles.navButtonText}>Sign Out</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {isMobile && (
+            <Pressable style={styles.mobileMenuButton} onPress={() => navigation.navigate('MobileMenu')}>
+              <Text style={styles.mobileMenuIcon}>☰</Text>
+            </Pressable>
+          )}
         </View>
-      </Modal>
 
-      <View style={styles.centeredContent}>
-        <Text style={styles.title}>Welcome, {userName}!</Text>
-        <Text style={styles.body}>How do you want to help your community today?</Text>
-
-        <Pressable
-          style={[styles.button, hoveredButton === 'viewHours' && styles.hoveredBox]}
-          onHoverIn={() => setHoveredButton('viewHours')}
-          onHoverOut={() => setHoveredButton(null)}
-          onPress={() => navigation.navigate('ViewLoggedHours')}
-        >
-          <Text style={styles.buttonText}>View Logged Hours</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.button, hoveredButton === 'studentMap' && styles.hoveredBox]}
-          onHoverIn={() => setHoveredButton('studentMap')}
-          onHoverOut={() => setHoveredButton(null)}
-          onPress={() => navigation.navigate('StudentMap')}
-        >
-          <Text style={styles.buttonText}>View Map</Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.button, hoveredButton === 'StudentOpportunitiesCalendar' && styles.hoveredBox]}
-          onHoverIn={() => setHoveredButton('StudentOpportunitiesCalendar')}
-          onHoverOut={() => setHoveredButton(null)}
-          onPress={() => navigation.navigate('StudentOpportunitiesCalendar')}
-        >
-          <Text style={styles.buttonText}>View Opportunities Calendar</Text>
-        </Pressable>
+        {/* Main content */}
+        <View style={styles.contentContainer} removeClippedSubviews={true}>
+        <Text
+            key={`welcome-${userName}`}
+            style={[styles.welcomeText]}
+            selectable={false}
+          >
+            Welcome,
+          </Text>
+          <Text selectable={false} style={styles.nameText}>{userName}</Text>
+          <Text selectable={false} style={styles.subtitleText}>
+            How do you want to help your community today?
+          </Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: '#1A1446' },
+  container: { flex: 1, backgroundColor: '#090426' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
-  navbar: {
-    position: 'absolute',
-    top: 50,
-    
-    height: 80,
-    backgroundColor: '#1A1446',
-    width: '100%',
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    zIndex: 2,
-  },
-  
-  logoImage: {
-    width: 120,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  menuIcon: {
-    padding: 10,
-  },
-  menuText: {
-    fontSize: 28,
-    color: 'white',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 30,
-    width: '80%',
-    alignItems: 'center',
-  },
-  navItem: {
-    fontSize: 18,
-    color: '#1A1446',
-    marginVertical: 10,
-  },
-  closeButton: {
-    marginTop: 20,
-    paddingVertical: 10,
+    padding: 12,
     paddingHorizontal: 20,
     backgroundColor: '#1A1446',
-    borderRadius: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+    zIndex: 10,
   },
-  closeText: {
-    color: 'white',
-    fontWeight: '600',
+  logoImage: { width: 100, height: 36, resizeMode: 'contain' },
+  navWrapper: {
+    flex: 1,
+    marginLeft: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  centeredContent: {
+  navContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  navItemContainer: {
+    position: 'relative',
+    marginHorizontal: 4,
+  },
+  navButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+  },
+  activeNavButton: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  navButtonText: { color: '#BBBBCC', fontSize: 15, fontWeight: '500' },
+  activeNavText: { color: 'white', fontWeight: '600' },
+  dropdownMenu: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    backgroundColor: '#1A1446',
+    borderRadius: 4,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 20,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  dropdownItemText: { color: '#BBBBCC', fontSize: 15, fontWeight: '500' },
+  signOutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginLeft: 20,
+    borderRadius: 4,
+  },
+  mobileMenuButton: { marginLeft: 'auto', padding: 10 },
+  mobileMenuIcon: { fontSize: 24, color: 'white' },
+  contentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 100,
+    paddingBottom: 80, // slight shift down to center better visually
+    zIndex: 2,
   },
-  title: {
+  welcomeText: {
     color: '#FFFFFF',
-    fontSize: 34,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  body: {
-    color: '#DDDDDD',
-    fontSize: 16,
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  button: {
-    backgroundColor: '#1f91d6',
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    marginVertical: 10,
-    minWidth: '80%',
-    alignItems: 'center',
-  },
-  hoveredBox: {
-    backgroundColor: '#1177b0',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    fontSize: 26,
     fontWeight: '600',
+    marginBottom: 4, // slight space under "Welcome,"
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    backgroundColor: 'transparent',
   },
+  
+  nameText: {
+    color: '#FFFFFF',
+    fontSize: 44,
+    fontWeight: 'bold',
+    marginBottom: 35, 
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    backgroundColor: 'transparent',
+  },
+  
+  subtitleText: {
+    color: '#CCCCDD',
+    fontSize: 20,
+    textAlign: 'center',
+    lineHeight: 28,
+    paddingHorizontal: 10,
+    backgroundColor: 'transparent',
+    includeFontPadding: false,
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  
 });
 
 export default StudentHomePage;

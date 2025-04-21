@@ -6,6 +6,7 @@ import { firestore, auth, functions } from './firebaseConfig';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const LogHoursScreen = ({ navigation }) => {
   const [joinedCommunities, setJoinedCommunities] = useState([]);
@@ -189,7 +190,21 @@ const LogHoursScreen = ({ navigation }) => {
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
-    </PaperProvider>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
+          </PaperProvider>
   );
 };
 
@@ -200,7 +215,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 20,
-    paddingBottom: 60,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 24,
@@ -271,6 +286,17 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
   },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 10,
+    zIndex: 100,
+  }
 });
 
 export default LogHoursScreen;

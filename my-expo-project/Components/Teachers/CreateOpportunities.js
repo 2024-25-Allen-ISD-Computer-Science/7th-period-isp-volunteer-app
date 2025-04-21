@@ -196,7 +196,7 @@ const CreateOpportunities = ({ navigation }) => {
       </TouchableOpacity>
 
       <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('StudentHomePage')}>
+        <TouchableOpacity onPress={() => navigation.navigate('TeacherHomePage')}>
           <MaterialIcons name="home" size={30} color="white" />
         </TouchableOpacity>
         <TouchableOpacity>
@@ -255,9 +255,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E2E2E',
     borderRadius: 8,
     marginBottom: 15,
+    height: 30,
+    justifyContent: 'center',
   },
   picker: {
-    color: '#FFF',
+    color: '#000000',
+    fontSize: 16,
+    height: 150,
   },
   createButton: {
     backgroundColor: '#1f91d6',

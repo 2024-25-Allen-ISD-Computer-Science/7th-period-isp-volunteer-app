@@ -1,9 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { firestore, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+} from 'firebase/firestore';
+import { MaterialIcons } from '@expo/vector-icons';
 
-const ManageOpportunitiesScreen = () => {
+const ManageOpportunitiesScreen = ({ navigation }) => {
   const [opportunities, setOpportunities] = useState([]);
   const [editingOpportunity, setEditingOpportunity] = useState(null);
   const [joinedStudents, setJoinedStudents] = useState({});
@@ -11,9 +30,15 @@ const ManageOpportunitiesScreen = () => {
   useEffect(() => {
     const fetchOpportunities = async () => {
       try {
-        const q = query(collection(firestore, 'opportunities'), where('createdBy', '==', auth.currentUser.uid));
+        const q = query(
+          collection(firestore, 'opportunities'),
+          where('createdBy', '==', auth.currentUser.uid)
+        );
         const querySnapshot = await getDocs(q);
-        const opportunitiesList = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const opportunitiesList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setOpportunities(opportunitiesList);
       } catch (error) {
         Alert.alert('Error', 'Failed to fetch opportunities: ' + error.message);
@@ -27,9 +52,9 @@ const ManageOpportunitiesScreen = () => {
     try {
       const usersSnapshot = await getDocs(collection(firestore, 'users'));
       const students = usersSnapshot.docs
-        .filter(doc => doc.data().joinedOpportunities?.includes(opportunityId))
-        .map(doc => ({ id: doc.id, ...doc.data() }));
-      setJoinedStudents(prev => ({ ...prev, [opportunityId]: students }));
+        .filter((doc) => doc.data().joinedOpportunities?.includes(opportunityId))
+        .map((doc) => ({ id: doc.id, ...doc.data() }));
+      setJoinedStudents((prev) => ({ ...prev, [opportunityId]: students }));
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch joined students: ' + error.message);
     }
@@ -41,21 +66,33 @@ const ManageOpportunitiesScreen = () => {
   };
 
   const handleSave = async () => {
+    const { name, date, time, description, hourValue, communityId, id } = editingOpportunity;
+  
+    if (!name || !date || !time || !description || !hourValue || !communityId) {
+      Alert.alert('Error', 'Please fill in all fields before saving.');
+      return;
+    }
+  
     try {
-      const opportunityRef = doc(firestore, 'opportunities', editingOpportunity.id);
+      const opportunityRef = doc(firestore, 'opportunities', id);
       await updateDoc(opportunityRef, {
-        name: editingOpportunity.name,
-        date: editingOpportunity.date,
-        time: editingOpportunity.time,
-        description: editingOpportunity.description,
-        hourValue: editingOpportunity.hourValue,
-        communityId: editingOpportunity.communityId,
+        name,
+        date,
+        time,
+        description,
+        hourValue,
+        communityId,
       });
-
+  
+      setOpportunities((prev) =>
+        prev.map((opp) => (opp.id === id ? { ...editingOpportunity } : opp))
+      );
+  
       Alert.alert('Success', 'Opportunity updated successfully.');
       setEditingOpportunity(null);
     } catch (error) {
       Alert.alert('Error', 'Failed to update opportunity: ' + error.message);
+      console.error(error);
     }
   };
 
@@ -75,12 +112,14 @@ const ManageOpportunitiesScreen = () => {
       const userDoc = await getDoc(userRef);
 
       if (userDoc.exists()) {
-        const updatedOpportunities = userDoc.data().joinedOpportunities.filter(id => id !== opportunityId);
+        const updatedOpportunities = userDoc
+          .data()
+          .joinedOpportunities.filter((id) => id !== opportunityId);
         await updateDoc(userRef, { joinedOpportunities: updatedOpportunities });
 
-        setJoinedStudents(prev => ({
+        setJoinedStudents((prev) => ({
           ...prev,
-          [opportunityId]: prev[opportunityId].filter(student => student.id !== studentId)
+          [opportunityId]: prev[opportunityId].filter((student) => student.id !== studentId),
         }));
 
         Alert.alert('Success', 'Student removed successfully.');
@@ -91,134 +130,186 @@ const ManageOpportunitiesScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Manage Opportunities</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Manage Opportunities</Text>
 
-      <FlatList
-        data={opportunities}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.opportunityBox}>
-            {editingOpportunity?.id === item.id ? (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Name"
-                  value={editingOpportunity.name}
-                  onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, name: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Date"
-                  value={editingOpportunity.date}
-                  onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, date: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Time"
-                  value={editingOpportunity.time}
-                  onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, time: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Description"
-                  value={editingOpportunity.description}
-                  onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, description: text })}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Hour Value"
-                  keyboardType="numeric"
-                  value={String(editingOpportunity.hourValue)}
-                  onChangeText={(text) => setEditingOpportunity({ ...editingOpportunity, hourValue: parseFloat(text) })}
-                />
+        <FlatList
+          data={opportunities}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.opportunityBox}>
+              {editingOpportunity?.id === item.id ? (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Name"
+                    placeholderTextColor="#888"
+                    value={editingOpportunity.name}
+                    onChangeText={(text) =>
+                      setEditingOpportunity({ ...editingOpportunity, name: text })
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Date"
+                    placeholderTextColor="#888"
+                    value={editingOpportunity.date}
+                    onChangeText={(text) =>
+                      setEditingOpportunity({ ...editingOpportunity, date: text })
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Time"
+                    placeholderTextColor="#888"
+                    value={editingOpportunity.time}
+                    onChangeText={(text) =>
+                      setEditingOpportunity({ ...editingOpportunity, time: text })
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Description"
+                    placeholderTextColor="#888"
+                    value={editingOpportunity.description}
+                    onChangeText={(text) =>
+                      setEditingOpportunity({ ...editingOpportunity, description: text })
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Hour Value"
+                    placeholderTextColor="#888"
+                    keyboardType="numeric"
+                    value={String(editingOpportunity.hourValue)}
+                    onChangeText={(text) =>
+                      setEditingOpportunity({
+                        ...editingOpportunity,
+                        hourValue: parseFloat(text),
+                      })
+                    }
+                  />
 
-                <Text style={styles.subTitle}>Joined Students:</Text>
-                {joinedStudents[item.id]?.map((student) => (
-                  <View key={student.id} style={styles.studentBox}>
-                    <Text>{student.firstName} {student.lastName}</Text>
-                    <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveStudent(student.id, item.id)}>
-                      <Text style={styles.buttonText}>Remove</Text>
+                  <Text style={styles.subTitle}>Joined Students:</Text>
+                  {joinedStudents[item.id]?.map((student) => (
+                    <View key={student.id} style={styles.studentBox}>
+                      <Text style={{ color: '#fff' }}>
+                        {student.firstName} {student.lastName}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleRemoveStudent(student.id, item.id)}
+                      >
+                        <Text style={styles.buttonText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+
+                  <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                    <Text style={styles.buttonText}>Save</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.opportunityTitle}>{item.name}</Text>
+                  <Text style={styles.opportunityText}>Date: {item.date}</Text>
+                  <Text style={styles.opportunityText}>Time: {item.time}</Text>
+                  <Text style={styles.opportunityText}>Description: {item.description}</Text>
+                  <Text style={styles.opportunityText}>Hour Value: {item.hourValue}</Text>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
+                      <Text style={styles.buttonText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDelete(item.id)}
+                    >
+                      <Text style={styles.buttonText}>Delete</Text>
                     </TouchableOpacity>
                   </View>
-                ))}
+                </>
+              )}
+            </View>
+          )}
+        />
+      </ScrollView>
 
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                  <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={styles.opportunityTitle}>{item.name}</Text>
-                <Text>Date: {item.date}</Text>
-                <Text>Time: {item.time}</Text>
-                <Text>Description: {item.description}</Text>
-                <Text>Hour Value: {item.hourValue}</Text>
-                <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.editButton} onPress={() => handleEdit(item)}>
-                    <Text style={styles.buttonText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-                    <Text style={styles.buttonText}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        )}
-      />
-    </ScrollView>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={() => navigation.navigate('TeacherHomePage')}>
+          <MaterialIcons name="home" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="search" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <MaterialIcons name="favorite" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <MaterialIcons name="person" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: '#1C1C1C',
+    paddingBottom: 70,
+  },
+  scrollContent: {
     padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 10,
   },
   subTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#FFF',
     marginTop: 10,
   },
   opportunityBox: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2E2E2E',
     padding: 15,
-    borderRadius: 5,
-    marginBottom: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderColor: '#444',
     borderWidth: 1,
-    borderColor: '#ccc',
   },
   opportunityTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#FFF',
+    marginBottom: 6,
+  },
+  opportunityText: {
+    color: '#CCC',
   },
   input: {
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 5,
+    backgroundColor: '#444',
+    color: '#FFF',
     padding: 10,
-    marginVertical: 10,
+    borderRadius: 5,
+    marginVertical: 6,
   },
   studentBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#e0e0e0',
-    padding: 10,
+    backgroundColor: '#444',
+    padding: 8,
     borderRadius: 5,
     marginVertical: 5,
   },
   saveButton: {
     backgroundColor: '#4CAF50',
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 6,
     alignItems: 'center',
     marginTop: 10,
   },
@@ -226,28 +317,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
     marginRight: 10,
   },
   deleteButton: {
     backgroundColor: '#f44336',
     padding: 10,
     borderRadius: 5,
-    alignItems: 'center',
   },
   removeButton: {
     backgroundColor: '#FF5722',
-    padding: 5,
+    padding: 6,
     borderRadius: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFF',
     fontWeight: 'bold',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#2E2E2E',
+    paddingVertical: 12,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
 });
 
