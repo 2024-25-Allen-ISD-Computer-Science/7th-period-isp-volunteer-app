@@ -1,6 +1,6 @@
 {
   "functions": {
-    "source": "emails",
+    "source": "functions",
     "ignore": [
       "node_modules",
       ".git",

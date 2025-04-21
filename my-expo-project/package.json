@@ -57,6 +57,7 @@
     "react-native-video": "^6.11.0",
     "react-native-web": "~0.19.10",
     "react-native-web-maps": "^0.3.0",
+    "resend": "^4.3.0",
     "sparkpost": "^2.1.4"
   },
   "devDependencies": {
